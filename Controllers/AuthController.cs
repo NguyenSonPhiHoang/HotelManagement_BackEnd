@@ -1,11 +1,14 @@
 ﻿using HotelManagement.Model;
 using HotelManagement.Services;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelManagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("AllowReactApp")] 
+
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;

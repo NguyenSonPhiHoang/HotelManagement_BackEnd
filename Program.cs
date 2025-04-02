@@ -1,5 +1,4 @@
-﻿// Program.cs
-using HotelManagement.DataReader;
+﻿using HotelManagement.DataReader;
 using HotelManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,15 +16,16 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 
-
-// Thêm CORS nếu cần
+// Cấu hình CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder => builder
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader());
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") // URL của React frontend
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
 });
 
 var app = builder.Build();
@@ -38,7 +38,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("AllowReactApp"); // Đảm bảo API sử dụng đúng policy CORS
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

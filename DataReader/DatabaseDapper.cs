@@ -6,7 +6,7 @@ namespace HotelManagement.DataReader
 {
     public class DatabaseDapper
     {
-        private string connectionString = "Server=SINDYZ;Initial Catalog=HotelManagement;Integrated Security=True; TrustServerCertificate=True;";
+        private string connectionString = "Server=118.69.126.49;Initial Catalog=Data_QLKS_112_Nhom2;User ID=user_112_nhom2;Password=123456789;Encrypt=True;Trust Server Certificate=True";
         private SqlConnection conn;
         private DataTable dt;
         private SqlCommand cmd;
