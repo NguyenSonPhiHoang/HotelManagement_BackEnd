@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "agsW/4LVHVQ=",
+  "dgSpecHash": "St9v6xVh1gI=",
   "success": true,
-  "projectFilePath": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\HotelManagement.csproj",
+  "projectFilePath": "C:\\Users\\DELL\\HotelManagement_BackEnd\\HotelManagement.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\DELL\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\DELL\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

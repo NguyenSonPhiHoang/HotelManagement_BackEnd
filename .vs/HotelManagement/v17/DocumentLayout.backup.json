@@ -1,68 +1,92 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\",
+  "WorkspaceRootPath": "C:\\Users\\DELL\\HotelManagement_BackEnd\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\datareader\\databasedapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:datareader\\databasedapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\controllers\\customercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:controllers\\customercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\services\\iroleservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:services\\iroleservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\controllers\\rolecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:controllers\\rolecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\services\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\usertoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\usertoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\services\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:services\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\services\\iaccountservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\datareader\\databasedapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:datareader\\databasedapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\services\\icustomer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:services\\icustomer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\role.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\role.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\services\\iaccountservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:services\\iaccountservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\model\\account.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\addpointrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\addpointrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\customer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\customer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\account.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\account.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\model\\apiresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\services\\iroleservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:services\\iroleservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\controllers\\rolecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:controllers\\rolecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\apiresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\apiresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\model\\usertoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\usertoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\model\\tokenresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\tokenresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\tokenresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\model\\registerrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\registerrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\registerrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\model\\changepasswordrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\changepasswordrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\changepasswordrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|d:\\backend\\ptudw\\hotelmanagement\\hotelmanagement\\model\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|c:\\users\\dell\\hotelmanagement_backend\\model\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DBEF1B07-406A-4B18-AAAB-D7674D77B7B4}|HotelManagement.csproj|solutionrelative:model\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -73,28 +97,106 @@
       "DocumentGroups": [
         {
           "DockedHeight": 275,
-          "SelectedChildIndex": 11,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-04-03T03:22:41.943Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "AddPointRequest.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\AddPointRequest.cs",
+              "RelativeDocumentMoniker": "Model\\AddPointRequest.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\AddPointRequest.cs",
+              "RelativeToolTip": "Model\\AddPointRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-03T02:38:01.668Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "CustomerController.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Controllers\\CustomerController.cs",
+              "RelativeDocumentMoniker": "Controllers\\CustomerController.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Controllers\\CustomerController.cs*",
+              "RelativeToolTip": "Controllers\\CustomerController.cs*",
+              "ViewState": "AgIAAF8AAAAAAAAAAAAAwHYAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-03T02:34:48.207Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ICustomer.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Services\\ICustomer.cs",
+              "RelativeDocumentMoniker": "Services\\ICustomer.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Services\\ICustomer.cs",
+              "RelativeToolTip": "Services\\ICustomer.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAcwLEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-03T02:34:06.701Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Customer.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\Customer.cs",
+              "RelativeDocumentMoniker": "Model\\Customer.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\Customer.cs",
+              "RelativeToolTip": "Model\\Customer.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAIwBYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-03T02:12:22.401Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Role.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\Role.cs",
+              "RelativeDocumentMoniker": "Model\\Role.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\Role.cs",
+              "RelativeToolTip": "Model\\Role.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAgwAoAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-03T00:52:55.593Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
               "Title": "IRoleService.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Services\\IRoleService.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Services\\IRoleService.cs",
               "RelativeDocumentMoniker": "Services\\IRoleService.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Services\\IRoleService.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Services\\IRoleService.cs",
               "RelativeToolTip": "Services\\IRoleService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAABKAAAAAAAAAA==",
+              "ViewState": "AgIAAGEAAAAAAAAAAAAuwHoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-02T08:03:36.195Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 16,
               "Title": "ApiResponse.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\ApiResponse.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\ApiResponse.cs",
               "RelativeDocumentMoniker": "Model\\ApiResponse.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\ApiResponse.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\ApiResponse.cs",
               "RelativeToolTip": "Model\\ApiResponse.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -103,13 +205,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 13,
               "Title": "Account.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\Account.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\Account.cs",
               "RelativeDocumentMoniker": "Model\\Account.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\Account.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\Account.cs",
               "RelativeToolTip": "Model\\Account.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-26T07:24:47.387Z",
               "EditorCaption": ""
@@ -118,35 +220,35 @@
               "$type": "Document",
               "DocumentIndex": 6,
               "Title": "IAuthService.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Services\\IAuthService.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Services\\IAuthService.cs",
               "RelativeDocumentMoniker": "Services\\IAuthService.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Services\\IAuthService.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Services\\IAuthService.cs",
               "RelativeToolTip": "Services\\IAuthService.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAA2wFcAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFcAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-26T07:17:41.066Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 5,
               "Title": "UserToken.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\UserToken.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\UserToken.cs",
               "RelativeDocumentMoniker": "Model\\UserToken.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\UserToken.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\UserToken.cs",
               "RelativeToolTip": "Model\\UserToken.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-26T07:15:06.402Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 18,
               "Title": "TokenResponse.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\TokenResponse.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\TokenResponse.cs",
               "RelativeDocumentMoniker": "Model\\TokenResponse.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\TokenResponse.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\TokenResponse.cs",
               "RelativeToolTip": "Model\\TokenResponse.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -155,11 +257,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 19,
               "Title": "RegisterRequest.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\RegisterRequest.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\RegisterRequest.cs",
               "RelativeDocumentMoniker": "Model\\RegisterRequest.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\RegisterRequest.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\RegisterRequest.cs",
               "RelativeToolTip": "Model\\RegisterRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAABGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -168,39 +270,39 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 1,
               "Title": "AuthController.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Controllers\\AuthController.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "Controllers\\AuthController.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Controllers\\AuthController.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Controllers\\AuthController.cs",
               "RelativeToolTip": "Controllers\\AuthController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAABMAAAAAAAAAAAAQwBIAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-26T07:14:40.784Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 2,
               "Title": "AccountController.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Controllers\\AccountController.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Controllers\\AccountController.cs",
               "RelativeDocumentMoniker": "Controllers\\AccountController.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Controllers\\AccountController.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Controllers\\AccountController.cs",
               "RelativeToolTip": "Controllers\\AccountController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADQAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAACYAAAAAAAAAAAAkwBkAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-26T07:14:39.904Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 10,
               "Title": "IAccountService.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Services\\IAccountService.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Services\\IAccountService.cs",
               "RelativeDocumentMoniker": "Services\\IAccountService.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Services\\IAccountService.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Services\\IAccountService.cs",
               "RelativeToolTip": "Services\\IAccountService.cs",
-              "ViewState": "AgIAACwAAAAAAAAAAADwv2cAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAMQAAAAAAAAAAAAAANoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-26T07:09:59.524Z",
               "EditorCaption": ""
@@ -209,34 +311,36 @@
               "$type": "Document",
               "DocumentIndex": 3,
               "Title": "Program.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Program.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Program.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAkAAAAAAAAAA==",
+              "ViewState": "AgIAABIAAAAAAAAAAAAgwFEAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-27T07:44:16.207Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 7,
               "Title": "DatabaseDapper.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\DataReader\\DatabaseDapper.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\DataReader\\DatabaseDapper.cs",
               "RelativeDocumentMoniker": "DataReader\\DatabaseDapper.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\DataReader\\DatabaseDapper.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\DataReader\\DatabaseDapper.cs",
               "RelativeToolTip": "DataReader\\DatabaseDapper.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAB6AAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-30T08:23:47.773Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 17,
               "Title": "Microsoft.Common.CurrentVersion.targets",
               "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "RelativeDocumentMoniker": "..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
               "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "RelativeToolTip": "..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
               "ViewState": "AgIAALoUAAAAAAAAAIAwwMkUAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
               "WhenOpened": "2025-03-31T10:28:29.669Z",
@@ -244,11 +348,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 20,
               "Title": "ChangePasswordRequest.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\ChangePasswordRequest.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\ChangePasswordRequest.cs",
               "RelativeDocumentMoniker": "Model\\ChangePasswordRequest.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\ChangePasswordRequest.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\ChangePasswordRequest.cs",
               "RelativeToolTip": "Model\\ChangePasswordRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -257,11 +361,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 15,
               "Title": "RoleController.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Controllers\\RoleController.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Controllers\\RoleController.cs",
               "RelativeDocumentMoniker": "Controllers\\RoleController.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Controllers\\RoleController.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Controllers\\RoleController.cs",
               "RelativeToolTip": "Controllers\\RoleController.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -270,11 +374,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 21,
               "Title": "LoginRequest.cs",
-              "DocumentMoniker": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\LoginRequest.cs",
+              "DocumentMoniker": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\LoginRequest.cs",
               "RelativeDocumentMoniker": "Model\\LoginRequest.cs",
-              "ToolTip": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\Model\\LoginRequest.cs",
+              "ToolTip": "C:\\Users\\DELL\\HotelManagement_BackEnd\\Model\\LoginRequest.cs",
               "RelativeToolTip": "Model\\LoginRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
