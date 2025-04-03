@@ -2,6 +2,7 @@
 using HotelManagement.Model;
 using HotelManagement.Services;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelManagement.Controllers
 {
@@ -17,6 +18,7 @@ namespace HotelManagement.Controllers
         }
 
         [HttpGet("GetAll")]
+        [Authorize(Roles = "1")] // Chỉ cho phép người dùng có MaVaiTro là 1 (admin) truy cập
         public ActionResult<ApiResponse<IEnumerable<Account>>> GetAllAccounts()
         {
             var response = _accountService.GetAllAccounts();
