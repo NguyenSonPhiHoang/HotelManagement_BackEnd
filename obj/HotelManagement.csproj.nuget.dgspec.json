@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\HotelManagement.csproj": {}
+    "C:\\Users\\khacd\\LTUDW_22CT112\\HotelManagement_BackEnd\\HotelManagement.csproj": {}
   },
   "projects": {
-    "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\HotelManagement.csproj": {
+    "C:\\Users\\khacd\\LTUDW_22CT112\\HotelManagement_BackEnd\\HotelManagement.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\HotelManagement.csproj",
+        "projectUniqueName": "C:\\Users\\khacd\\LTUDW_22CT112\\HotelManagement_BackEnd\\HotelManagement.csproj",
         "projectName": "HotelManagement",
-        "projectPath": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\HotelManagement.csproj",
-        "packagesPath": "C:\\Users\\DELL\\.nuget\\packages\\",
-        "outputPath": "D:\\BackEnd\\PTUDW\\HotelManagement\\HotelManagement\\obj\\",
+        "projectPath": "C:\\Users\\khacd\\LTUDW_22CT112\\HotelManagement_BackEnd\\HotelManagement.csproj",
+        "packagesPath": "C:\\Users\\khacd\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\khacd\\LTUDW_22CT112\\HotelManagement_BackEnd\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\DELL\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\khacd\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -43,8 +37,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.200"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -94,7 +87,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.408/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

@@ -1,0 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace HotelManagement_BackEnd.Model
+{
+    public class ServiceType
+    {
+        public int MaLoaiDV { get; set; }
+        public string TenLoaiDV { get; set; }
+        public string MoTa { get; set; }
+    }
+}

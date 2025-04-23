@@ -1,5 +1,10 @@
-﻿using HotelManagement.DataReader;
+﻿using System.Data;
+using HotelManagement.DataReader;
 using HotelManagement.Services;
+using HotelManagement_BackEnd.Application.Interfaces;
+using HotelManagement_BackEnd.Application.Services;
+using HotelManagement_BackEnd.Helpers;
+using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,13 +14,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Đăng ký DatabaseDapper
+builder.Services.AddScoped<IDbConnection>(sql => new SqlConnection(builder.Configuration.GetConnectionString("Dbcontext")));
 builder.Services.AddSingleton<DatabaseDapper>();
 
 // Đăng ký các services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
-
+builder.Services.AddScoped<IServiceTypeService, ServiceTypeService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
+builder.Services.AddScoped<IBookingServiceService, BookingServiceService>();
 // Cấu hình CORS
 builder.Services.AddCors(options =>
 {
