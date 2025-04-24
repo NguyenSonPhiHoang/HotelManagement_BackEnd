@@ -53,13 +53,10 @@ namespace HotelManagement.Controllers
             {
                 return BadRequest(ApiResponse<bool>.ErrorResponse("Mã khách hàng không khớp"));
             }
-
-            // Kiểm tra khách hàng có tồn tại không
             var existingCustomer = _customerService.GetCustomerById(id);
             if (!existingCustomer.Success)
                 return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng"));
 
-            // Kiểm tra email và điện thoại đã tồn tại chưa (nếu có thay đổi)
             if (existingCustomer.Data.Email != customer.Email)
             {
                 var emailExists = _customerService.IsEmailExists(customer.Email);
@@ -81,7 +78,6 @@ namespace HotelManagement.Controllers
         [HttpDelete("Delete{id}")]
         public ActionResult<ApiResponse<bool>> DeleteCustomer(string id)
         {
-            // Kiểm tra khách hàng có tồn tại không
             var existingCustomer = _customerService.GetCustomerById(id);
             if (!existingCustomer.Success)
                 return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng"));
