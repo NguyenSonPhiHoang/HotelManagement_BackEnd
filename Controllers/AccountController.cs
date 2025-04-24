@@ -18,7 +18,7 @@ namespace HotelManagement.Controllers
         }
 
         [HttpGet("GetAll")]
-        [Authorize(Roles = "1")] // Chỉ cho phép người dùng có MaVaiTro là 1 (admin) truy cập
+        [Authorize(Roles = "1")]
         public ActionResult<ApiResponse<IEnumerable<Account>>> GetAllAccounts()
         {
             var response = _accountService.GetAllAccounts();
@@ -41,7 +41,6 @@ namespace HotelManagement.Controllers
         [HttpPost("AddAccount")]
         public ActionResult<ApiResponse<int>> CreateAccount([FromBody] AddAccount account)
         {
-            // Kiểm tra username và email đã tồn tại chưa
             var usernameExists = _accountService.IsUsernameExists(account.TenTaiKhoan);
             if (usernameExists.Success && usernameExists.Data)
                 return BadRequest(ApiResponse<int>.ErrorResponse("Tên tài khoản đã tồn tại"));
