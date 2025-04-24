@@ -7,3 +7,7 @@ obj/
 *.user
 *.suo
 *.log
+packages/
+*.cache
+.vscode/
+appsettings.Development.json
