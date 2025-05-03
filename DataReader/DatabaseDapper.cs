@@ -154,14 +154,16 @@ namespace HotelManagement.DataReader
         {
             try
             {
-                conn.Open();
-                return conn.QueryMultiple(sql, parameters);
+                if (conn.State != ConnectionState.Open)
+                    conn.Open();
+                return SqlMapper.QueryMultiple(conn, sql, parameters, commandType: CommandType.StoredProcedure, commandTimeout: 30);
             }
             catch (Exception ex)
             {
                 conn.Close();
                 throw new Exception(ex.Message);
             }
+            
         }
     }
 }
