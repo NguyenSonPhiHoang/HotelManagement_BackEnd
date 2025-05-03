@@ -33,7 +33,7 @@ namespace HotelManagement_BackEnd.Services
                 parameters.Add("@LoaiPhong", loaiPhong);
                 parameters.Add("@TinhTrang", tinhTrang);
 
-                var rooms = _db.QueryStoredProcedure<Room>("sp_GetRoomsByFilter", parameters);
+                var rooms = _db.QueryStoredProcedure<Room>("sp_Room_Filter", parameters);
                 return ApiResponse<List<Room>>.SuccessResponse(rooms.ToList(), "Lọc phòng thành công");
             }
             catch (Exception ex)
