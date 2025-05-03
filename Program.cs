@@ -21,7 +21,8 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 builder.Services.AddScoped<IServiceTypeService, ServiceTypeService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
-
+builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
 // Cấu hình JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
