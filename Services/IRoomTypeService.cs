@@ -24,7 +24,7 @@ namespace HotelManagement_BackEnd.Services
 
         public ApiResponse<List<RoomType>> GetAllRoomTypes()
         {
-            var roomTypes = _db.QueryStoredProcedure<RoomType>("sp_GetAllRoomTypes");
+            var roomTypes = _db.QueryStoredProcedure<RoomType>("sp_RoomType_GetAll");
             return ApiResponse<List<RoomType>>.SuccessResponse(roomTypes.ToList(), "Lấy loại phòng thành công");
         }
     }
