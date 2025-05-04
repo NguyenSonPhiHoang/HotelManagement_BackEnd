@@ -1,6 +1,5 @@
 using HotelManagement.Model;
-using HotelManagement_BackEnd.Model;
-using HotelManagement_BackEnd.Services;
+using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelManagement_BackEnd.Controllers

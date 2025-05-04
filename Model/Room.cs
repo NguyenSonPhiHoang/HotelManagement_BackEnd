@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace HotelManagement_BackEnd.Model
+namespace HotelManagement.Model
 {
     public class Room
     {

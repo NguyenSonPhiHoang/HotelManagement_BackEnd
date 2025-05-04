@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HotelManagement_BackEnd.Model
+namespace HotelManagement.Model
 {
     public class Service
     {

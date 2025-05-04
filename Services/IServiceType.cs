@@ -4,9 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using HotelManagement.DataReader;
 using HotelManagement.Model;
-using HotelManagement_BackEnd.Model;
 
-namespace HotelManagement_BackEnd.Services
+namespace HotelManagement.Services
 {
     public interface IServiceTypeService
     {

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using HotelManagement.DataReader;
 using HotelManagement.Services;
-using HotelManagement_BackEnd.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 using Dapper;
 using HotelManagement.DataReader;
 using HotelManagement.Model;
-using HotelManagement_BackEnd.Model;
 
-namespace HotelManagement_BackEnd.Services
+namespace HotelManagement.Services
 {
     public interface IRoomTypeService
     {

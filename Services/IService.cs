@@ -1,4 +1,3 @@
-using HotelManagement_BackEnd.Model;
 using HotelManagement.DataReader;
 using HotelManagement.Model;
 
