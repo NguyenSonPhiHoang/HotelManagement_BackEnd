@@ -1,4 +1,4 @@
-namespace HotelManagement_BackEnd.Model
+namespace HotelManagement.Model
 {
     public class RoomType
     {

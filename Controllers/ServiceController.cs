@@ -1,9 +1,9 @@
 using HotelManagement.Model;
 using HotelManagement.Services;
-using HotelManagement_BackEnd.Model;
+using HotelManagement.Model;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HotelManagement_BackEnd.Controllers
+namespace HotelManagement.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HotelManagement_BackEnd.Model;
-using HotelManagement_BackEnd.Services;
+using HotelManagement.Model;
+using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HotelManagement_BackEnd.Controllers
+namespace HotelManagement.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

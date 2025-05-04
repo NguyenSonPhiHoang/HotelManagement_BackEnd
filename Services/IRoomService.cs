@@ -5,13 +5,15 @@ using System.Threading.Tasks;
 using Dapper;
 using HotelManagement.DataReader;
 using HotelManagement.Model;
-using HotelManagement_BackEnd.Model;
 
-namespace HotelManagement_BackEnd.Services
+namespace HotelManagement.Services
 {
     public interface IRoomService
     {
         ApiResponse<List<Room>> GetRoomsByFilter(string trangThai, string loaiPhong, string tinhTrang);
+        ApiResponse<Room> GetRoomBySoPhong(string soPhong);
+
+
     }
     public class RoomService : IRoomService
     {
@@ -40,6 +42,29 @@ namespace HotelManagement_BackEnd.Services
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách phòng");
                 return ApiResponse<List<Room>>.ErrorResponse("Đã xảy ra lỗi: " + ex.Message);
+            }
+        }
+
+        public ApiResponse<Room> GetRoomBySoPhong(string soPhong)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@SoPhong", soPhong);
+
+                var room = _db.QueryFirstOrDefaultStoredProcedure<Room>("sp_Room_SearchBySoPhong", parameters);
+
+                if (room == null)
+                {
+                    return ApiResponse<Room>.ErrorResponse($"Không tìm thấy phòng có số {soPhong}");
+                }
+
+                return ApiResponse<Room>.SuccessResponse(room, "Tìm phòng thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Lỗi khi tìm phòng với số phòng {soPhong}");
+                return ApiResponse<Room>.ErrorResponse("Đã xảy ra lỗi: " + ex.Message);
             }
         }
     }

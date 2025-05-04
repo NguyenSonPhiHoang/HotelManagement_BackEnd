@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HotelManagement_BackEnd.Model;
-using HotelManagement_BackEnd.Services;
+using HotelManagement.Model;
+using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelManagement_BackEnd.Controllers
@@ -28,6 +28,23 @@ public class RoomController : ControllerBase
         var result = _roomService.GetRoomsByFilter(trangThai, loaiPhong, tinhTrang);
         return Ok(result);
     }
+     [HttpGet("search")]
+        public IActionResult SearchRoomBySoPhong([FromQuery] string soPhong)
+        {
+            if (string.IsNullOrEmpty(soPhong))
+            {
+                return BadRequest(ApiResponse<Room>.ErrorResponse("Số phòng không được để trống"));
+            }
+
+            var response = _roomService.GetRoomBySoPhong(soPhong);  
+            
+            if (!response.Success)
+            {
+                return NotFound(response);
+            }
+            
+            return Ok(response);
+        }
 }
 
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+
 using HotelManagement.Model;
 using HotelManagement.Services;
 using System.Collections.Generic;
