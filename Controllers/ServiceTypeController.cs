@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HotelManagement_BackEnd.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/service-types")]
     [Consumes("application/json")]
     public class ServiceTypeController : ControllerBase
     {

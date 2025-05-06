@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HotelManagement.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/room-types")]
     public class RoomTypeController : ControllerBase
     {
         private readonly IRoomTypeService _roomTypeService;
