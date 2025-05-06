@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace HotelManagement.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/customers")]
     public class CustomerController : ControllerBase
     {
         private readonly ICustomerService _customerService;
@@ -16,21 +16,21 @@ namespace HotelManagement.Controllers
             _customerService = customerService;
         }
 
-        [HttpGet("GetAll")]
+        [HttpGet]
         public ActionResult<ApiResponse<IEnumerable<Customer>>> GetAllCustomers()
         {
             var response = _customerService.GetAllCustomers();
             return response.Success ? Ok(response) : StatusCode(500, response);
         }
 
-        [HttpGet("GetById{id}")]
+        [HttpGet("{id}")]
         public ActionResult<ApiResponse<Customer>> GetCustomerById(string id)
         {
             var response = _customerService.GetCustomerById(id);
             return response.Success ? Ok(response) : NotFound(response);
         }
 
-        [HttpPost("AddCustomer")]
+        [HttpPost]
         public ActionResult<ApiResponse<string>> CreateCustomer([FromBody] AddCustomer customer)
         {
             // Kiểm tra email và điện thoại đã tồn tại chưa
@@ -46,7 +46,7 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpPut("ModifyCustomer{id}")]
+        [HttpPut("{id}")]
         public ActionResult<ApiResponse<bool>> UpdateCustomer(string id, [FromBody] Customer customer)
         {
             if (id != customer.MaKhachHang)
@@ -75,7 +75,7 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpDelete("Delete{id}")]
+        [HttpDelete("{id}")]
         public ActionResult<ApiResponse<bool>> DeleteCustomer(string id)
         {
             var existingCustomer = _customerService.GetCustomerById(id);
@@ -86,7 +86,7 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpPost("AddPoints")]
+        [HttpPost("{id}/point")]
         public ActionResult<ApiResponse<bool>> AddPoints([FromBody] AddPointsRequest request)
         {
             // Kiểm tra khách hàng có tồn tại không
@@ -98,14 +98,14 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpGet("CheckEmail{email}")]
+        [HttpGet("validate/email/{email}")]
         public ActionResult<ApiResponse<bool>> CheckEmail(string email)
         {
             var response = _customerService.IsEmailExists(email);
             return Ok(response);
         }
 
-        [HttpGet("CheckPhone{phone}")]
+        [HttpGet("validate/phone/{phone}")]
         public ActionResult<ApiResponse<bool>> CheckPhone(string phone)
         {
             var response = _customerService.IsPhoneExists(phone);

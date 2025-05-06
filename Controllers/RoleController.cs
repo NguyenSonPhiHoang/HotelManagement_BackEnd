@@ -5,7 +5,7 @@ using HotelManagement.Services;
 namespace HotelManagement.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/roles")]
     public class RoleController : ControllerBase
     {
         private readonly IRoleService _roleService;
@@ -15,28 +15,28 @@ namespace HotelManagement.Controllers
             _roleService = roleService;
         }
 
-        [HttpGet("GetAll")]
+        [HttpGet]
         public IActionResult GetAllRoles()
         {
             var response = _roleService.GetAllRoles();
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpGet("GetById{maVaiTro}")]
+        [HttpGet("{maVaiTro}")]
         public IActionResult GetRoleById(string maVaiTro)
         {
             var response = _roleService.GetRoleById(maVaiTro);
             return response.Success ? Ok(response) : NotFound(response);
         }
 
-        [HttpPost("AddRole")]
+        [HttpPost]
         public IActionResult CreateRole([FromBody] Role role)
         {
             var response = _roleService.CreateRole(role);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpPut("ModifyRole{maVaiTro}")]
+        [HttpPut("{maVaiTro}")]
         public IActionResult UpdateRole(string maVaiTro, [FromBody] Role role)
         {
             if (maVaiTro != role.MaVaiTro)
@@ -48,7 +48,7 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpDelete("Delete{maVaiTro}")]
+        [HttpDelete("{maVaiTro}")]
         public IActionResult DeleteRole(string maVaiTro)
         {
             var response = _roleService.DeleteRole(maVaiTro);

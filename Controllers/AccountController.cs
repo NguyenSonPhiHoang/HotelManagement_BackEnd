@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace HotelManagement.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/accounts")]
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
@@ -18,28 +18,27 @@ namespace HotelManagement.Controllers
             _accountService = accountService;
         }
 
-        [HttpGet("GetAll")]
-        [Authorize(Roles = "1")]
+        [HttpGet]
         public ActionResult<ApiResponse<IEnumerable<Account>>> GetAllAccounts()
         {
             var response = _accountService.GetAllAccounts();
             return response.Success ? Ok(response) : StatusCode(500, response);
         }
 
-        [HttpGet("GetById{id}")]
+        [HttpGet("{id}")]
         public ActionResult<ApiResponse<Account>> GetAccountById(int id)
         {
             var response = _accountService.GetAccountById(id);
             return response.Success ? Ok(response) : NotFound(response);
         }
 
-        [HttpGet("GetByUsername{username}")]
+        [HttpGet("username/{username}")]
         public ActionResult<ApiResponse<Account>> GetAccountByUsername(string username)
         {
             var response = _accountService.GetAccountByUsername(username);
             return response.Success ? Ok(response) : NotFound(response);
         }
-        [HttpPost("AddAccount")]
+        [HttpPost]
         public ActionResult<ApiResponse<int>> CreateAccount([FromBody] AddAccount account)
         {
             var usernameExists = _accountService.IsUsernameExists(account.TenTaiKhoan);
@@ -54,7 +53,7 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpPut("ModifyAccount{id}")]
+        [HttpPut("{id}")]
         public ActionResult<ApiResponse<bool>> UpdateAccount(int id, [FromBody] Account account)
         {
             if (id != account.MaTaiKhoan)
@@ -86,7 +85,7 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpDelete("Delete{id}")]
+        [HttpDelete("{id}")]
         public ActionResult<ApiResponse<bool>> DeleteAccount(int id)
         {
             // Kiểm tra tài khoản có tồn tại không
@@ -98,7 +97,7 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpPost("ChangePassword")]
+        [HttpPost("change-password")]
         public ActionResult<ApiResponse<bool>> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var response = _accountService.ChangePassword(
@@ -110,14 +109,14 @@ namespace HotelManagement.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpGet("CheckUsername{username}")]
+        [HttpGet("validate/username/{username}")]
         public ActionResult<ApiResponse<bool>> CheckUsername(string username)
         {
             var response = _accountService.IsUsernameExists(username);
             return Ok(response);
         }
 
-        [HttpGet("CheckEmail{email}")]
+        [HttpGet("validate/email/{email}")]
         public ActionResult<ApiResponse<bool>> CheckEmail(string email)
         {
             var response = _accountService.IsEmailExists(email);

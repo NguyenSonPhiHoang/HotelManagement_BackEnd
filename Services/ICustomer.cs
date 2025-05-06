@@ -67,7 +67,6 @@ namespace HotelManagement.Services
                     addCustomer.HoTenKhachHang,
                     addCustomer.Email,
                     addCustomer.DienThoai,
-                    addCustomer.DiaChi,
                     addCustomer.MaCT
                 };
 
@@ -90,7 +89,6 @@ namespace HotelManagement.Services
                     customer.HoTenKhachHang,
                     customer.Email,
                     customer.DienThoai,
-                    customer.DiaChi,
                     customer.MaCT
                 };
 

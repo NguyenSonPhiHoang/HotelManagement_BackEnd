@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HotelManagement.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/services")]
     public class ServiceController : ControllerBase
     {
         private readonly IServiceService _serviceService;
