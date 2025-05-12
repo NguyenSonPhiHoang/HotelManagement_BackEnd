@@ -3,7 +3,7 @@ using HotelManagement.DataReader;
 
 namespace HotelManagement.Services
 {
-    public interface IRoleService
+    public interface IRoleRepository
     {
         ApiResponse<List<Role>> GetAllRoles();
         ApiResponse<Role> GetRoleById(string maVaiTro);
@@ -12,11 +12,11 @@ namespace HotelManagement.Services
         ApiResponse<int> DeleteRole(string maVaiTro);
     }
 
-    public class RoleService : IRoleService
+    public class RoleRepository : IRoleRepository
     {
         private readonly DatabaseDapper _db;
 
-        public RoleService(DatabaseDapper db)
+        public RoleRepository(DatabaseDapper db)
         {
             _db = db;
         }

@@ -1,6 +1,5 @@
 ﻿// Model/RegisterRequest.cs
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
 
 namespace HotelManagement.Model
 {

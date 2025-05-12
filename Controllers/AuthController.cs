@@ -1,21 +1,20 @@
 ﻿using HotelManagement.Model;
 using HotelManagement.Services;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors; 
 
 namespace HotelManagement.Controllers
 {
     [Route("api/auth")]
     [ApiController]
-    [EnableCors("AllowReactApp")] 
-
+    [EnableCors("AllowReactApp")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IAuthRepository _authRepository;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthRepository authRepository)
         {
-            _authService = authService;
+            _authRepository = authRepository;
         }
 
         [HttpPost("login")]
@@ -26,7 +25,7 @@ namespace HotelManagement.Controllers
                 return BadRequest(ApiResponse<object>.ErrorResponse("Tên đăng nhập và mật khẩu không được để trống"));
             }
 
-            var result = _authService.Login(request);
+            var result = _authRepository.Login(request);
 
             if (result == null || result.MaTaiKhoan <= 0)
             {
@@ -39,7 +38,7 @@ namespace HotelManagement.Controllers
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterRequest request)
         {
-            var result = _authService.Register(request);
+            var result = _authRepository.Register(request);
             if (!result.Success)
             {
                 return BadRequest(result);

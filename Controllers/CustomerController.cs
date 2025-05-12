@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using HotelManagement.Model;
+﻿using HotelManagement.Model;
 using HotelManagement.Services;
-using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HotelManagement.Controllers
 {
@@ -9,24 +8,24 @@ namespace HotelManagement.Controllers
     [Route("api/customers")]
     public class CustomerController : ControllerBase
     {
-        private readonly ICustomerService _customerService;
+        private readonly ICustomerRepository _customerRepository;
 
-        public CustomerController(ICustomerService customerService)
+        public CustomerController(ICustomerRepository customerRepository)
         {
-            _customerService = customerService;
+            _customerRepository = customerRepository;
         }
 
         [HttpGet]
         public ActionResult<ApiResponse<IEnumerable<Customer>>> GetAllCustomers()
         {
-            var response = _customerService.GetAllCustomers();
+            var response = _customerRepository.GetAllCustomers();
             return response.Success ? Ok(response) : StatusCode(500, response);
         }
 
         [HttpGet("{id}")]
         public ActionResult<ApiResponse<Customer>> GetCustomerById(string id)
         {
-            var response = _customerService.GetCustomerById(id);
+            var response = _customerRepository.GetCustomerById(id);
             return response.Success ? Ok(response) : NotFound(response);
         }
 
@@ -34,15 +33,15 @@ namespace HotelManagement.Controllers
         public ActionResult<ApiResponse<string>> CreateCustomer([FromBody] AddCustomer customer)
         {
             // Kiểm tra email và điện thoại đã tồn tại chưa
-            var emailExists = _customerService.IsEmailExists(customer.Email);
+            var emailExists = _customerRepository.IsEmailExists(customer.Email);
             if (emailExists.Success && emailExists.Data)
                 return BadRequest(ApiResponse<string>.ErrorResponse("Email đã tồn tại"));
 
-            var phoneExists = _customerService.IsPhoneExists(customer.DienThoai);
+            var phoneExists = _customerRepository.IsPhoneExists(customer.DienThoai);
             if (phoneExists.Success && phoneExists.Data)
                 return BadRequest(ApiResponse<string>.ErrorResponse("Số điện thoại đã tồn tại"));
 
-            var response = _customerService.CreateCustomer(customer);
+            var response = _customerRepository.CreateCustomer(customer);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
@@ -53,36 +52,36 @@ namespace HotelManagement.Controllers
             {
                 return BadRequest(ApiResponse<bool>.ErrorResponse("Mã khách hàng không khớp"));
             }
-            var existingCustomer = _customerService.GetCustomerById(id);
+            var existingCustomer = _customerRepository.GetCustomerById(id);
             if (!existingCustomer.Success)
                 return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng"));
 
             if (existingCustomer.Data.Email != customer.Email)
             {
-                var emailExists = _customerService.IsEmailExists(customer.Email);
+                var emailExists = _customerRepository.IsEmailExists(customer.Email);
                 if (emailExists.Success && emailExists.Data)
                     return BadRequest(ApiResponse<bool>.ErrorResponse("Email đã tồn tại"));
             }
 
             if (existingCustomer.Data.DienThoai != customer.DienThoai)
             {
-                var phoneExists = _customerService.IsPhoneExists(customer.DienThoai);
+                var phoneExists = _customerRepository.IsPhoneExists(customer.DienThoai);
                 if (phoneExists.Success && phoneExists.Data)
                     return BadRequest(ApiResponse<bool>.ErrorResponse("Số điện thoại đã tồn tại"));
             }
 
-            var response = _customerService.UpdateCustomer(customer);
+            var response = _customerRepository.UpdateCustomer(customer);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
         [HttpDelete("{id}")]
         public ActionResult<ApiResponse<bool>> DeleteCustomer(string id)
         {
-            var existingCustomer = _customerService.GetCustomerById(id);
+            var existingCustomer = _customerRepository.GetCustomerById(id);
             if (!existingCustomer.Success)
                 return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng"));
 
-            var response = _customerService.DeleteCustomer(id);
+            var response = _customerRepository.DeleteCustomer(id);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
@@ -90,26 +89,26 @@ namespace HotelManagement.Controllers
         public ActionResult<ApiResponse<bool>> AddPoints([FromBody] AddPointsRequest request)
         {
             // Kiểm tra khách hàng có tồn tại không
-            var existingCustomer = _customerService.GetCustomerById(request.MaKhachHang);
+            var existingCustomer = _customerRepository.GetCustomerById(request.MaKhachHang);
             if (!existingCustomer.Success)
                 return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng"));
 
-            var response = _customerService.AddPoints(request.MaKhachHang, request.SoDiem);
+            var response = _customerRepository.AddPoints(request.MaKhachHang, request.SoDiem);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
         [HttpGet("validate/email/{email}")]
         public ActionResult<ApiResponse<bool>> CheckEmail(string email)
         {
-            var response = _customerService.IsEmailExists(email);
+            var response = _customerRepository.IsEmailExists(email);
             return Ok(response);
         }
 
         [HttpGet("validate/phone/{phone}")]
         public ActionResult<ApiResponse<bool>> CheckPhone(string phone)
         {
-            var response = _customerService.IsPhoneExists(phone);
+            var response = _customerRepository.IsPhoneExists(phone);
             return Ok(response);
         }
     }
-}   
+}

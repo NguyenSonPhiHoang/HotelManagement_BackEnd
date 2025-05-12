@@ -1,5 +1,4 @@
-﻿// Services/IAccountService.cs
-using HotelManagement.DataReader;
+﻿using HotelManagement.DataReader;
 using HotelManagement.Model;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,7 @@ using HotelManagement.Utilities;
 
 namespace HotelManagement.Services
 {
-    public interface IAccountService
+    public interface IAccountRepository
     {
         ApiResponse<IEnumerable<Account>> GetAllAccounts();
         ApiResponse<Account> GetAccountById(int id);
@@ -21,13 +20,13 @@ namespace HotelManagement.Services
         ApiResponse<bool> IsEmailExists(string email);
     }
 
-    public class AccountService : IAccountService
+    public class AccountRepository : IAccountRepository
     {
         private readonly DatabaseDapper _db;
 
-        public AccountService(DatabaseDapper db)
+        public AccountRepository(DatabaseDapper db)
         {
-            _db = db ?? throw new ArgumentNullException(nameof(db));
+            _db = db;
         }
 
         public ApiResponse<IEnumerable<Account>> GetAllAccounts()

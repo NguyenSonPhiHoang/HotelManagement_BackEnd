@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace HotelManagement.Services
 {
-    public interface ICustomerService
+    public interface ICustomerRepository
     {
         ApiResponse<IEnumerable<Customer>> GetAllCustomers();
         ApiResponse<Customer> GetCustomerById(string id);
@@ -18,13 +18,13 @@ namespace HotelManagement.Services
         ApiResponse<bool> AddPoints(string customerId, int points);
     }
 
-    public class CustomerService : ICustomerService
+    public class CustomerRepository : ICustomerRepository
     {
         private readonly DatabaseDapper _db;
 
-        public CustomerService(DatabaseDapper db)
+        public CustomerRepository(DatabaseDapper db)
         {
-            _db = db ?? throw new ArgumentNullException(nameof(db));
+            _db = db ;
         }
 
         public ApiResponse<IEnumerable<Customer>> GetAllCustomers()

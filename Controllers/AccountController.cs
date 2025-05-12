@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
 using HotelManagement.Model;
 using HotelManagement.Services;
 using System.Collections.Generic;
@@ -11,45 +10,46 @@ namespace HotelManagement.Controllers
     [Route("api/accounts")]
     public class AccountController : ControllerBase
     {
-        private readonly IAccountService _accountService;
+        private readonly IAccountRepository _accountRepository;
 
-        public AccountController(IAccountService accountService)
+        public AccountController(IAccountRepository accountRepository)
         {
-            _accountService = accountService;
+            _accountRepository = accountRepository;
         }
 
         [HttpGet]
         public ActionResult<ApiResponse<IEnumerable<Account>>> GetAllAccounts()
         {
-            var response = _accountService.GetAllAccounts();
+            var response = _accountRepository.GetAllAccounts();
             return response.Success ? Ok(response) : StatusCode(500, response);
         }
 
         [HttpGet("{id}")]
         public ActionResult<ApiResponse<Account>> GetAccountById(int id)
         {
-            var response = _accountService.GetAccountById(id);
+            var response = _accountRepository.GetAccountById(id);
             return response.Success ? Ok(response) : NotFound(response);
         }
 
         [HttpGet("username/{username}")]
         public ActionResult<ApiResponse<Account>> GetAccountByUsername(string username)
         {
-            var response = _accountService.GetAccountByUsername(username);
+            var response = _accountRepository.GetAccountByUsername(username);
             return response.Success ? Ok(response) : NotFound(response);
         }
+
         [HttpPost]
         public ActionResult<ApiResponse<int>> CreateAccount([FromBody] AddAccount account)
         {
-            var usernameExists = _accountService.IsUsernameExists(account.TenTaiKhoan);
+            var usernameExists = _accountRepository.IsUsernameExists(account.TenTaiKhoan);
             if (usernameExists.Success && usernameExists.Data)
                 return BadRequest(ApiResponse<int>.ErrorResponse("Tên tài khoản đã tồn tại"));
 
-            var emailExists = _accountService.IsEmailExists(account.Email);
+            var emailExists = _accountRepository.IsEmailExists(account.Email);
             if (emailExists.Success && emailExists.Data)
                 return BadRequest(ApiResponse<int>.ErrorResponse("Email đã tồn tại"));
 
-            var response = _accountService.CreateAccount(account);
+            var response = _accountRepository.CreateAccount(account);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
@@ -62,26 +62,26 @@ namespace HotelManagement.Controllers
             }
 
             // Kiểm tra tài khoản có tồn tại không
-            var existingAccount = _accountService.GetAccountById(id);
+            var existingAccount = _accountRepository.GetAccountById(id);
             if (!existingAccount.Success)
                 return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy tài khoản"));
 
             // Kiểm tra username và email đã tồn tại chưa (nếu có thay đổi)
             if (existingAccount.Data.TenTaiKhoan != account.TenTaiKhoan)
             {
-                var usernameExists = _accountService.IsUsernameExists(account.TenTaiKhoan);
+                var usernameExists = _accountRepository.IsUsernameExists(account.TenTaiKhoan);
                 if (usernameExists.Success && usernameExists.Data)
                     return BadRequest(ApiResponse<bool>.ErrorResponse("Tên tài khoản đã tồn tại"));
             }
 
             if (existingAccount.Data.Email != account.Email)
             {
-                var emailExists = _accountService.IsEmailExists(account.Email);
+                var emailExists = _accountRepository.IsEmailExists(account.Email);
                 if (emailExists.Success && emailExists.Data)
                     return BadRequest(ApiResponse<bool>.ErrorResponse("Email đã tồn tại"));
             }
 
-            var response = _accountService.UpdateAccount(account);
+            var response = _accountRepository.UpdateAccount(account);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
@@ -89,18 +89,18 @@ namespace HotelManagement.Controllers
         public ActionResult<ApiResponse<bool>> DeleteAccount(int id)
         {
             // Kiểm tra tài khoản có tồn tại không
-            var existingAccount = _accountService.GetAccountById(id);
+            var existingAccount = _accountRepository.GetAccountById(id);
             if (!existingAccount.Success)
                 return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy tài khoản"));
 
-            var response = _accountService.DeleteAccount(id);
+            var response = _accountRepository.DeleteAccount(id);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
         [HttpPost("change-password")]
         public ActionResult<ApiResponse<bool>> ChangePassword([FromBody] ChangePasswordRequest request)
         {
-            var response = _accountService.ChangePassword(
+            var response = _accountRepository.ChangePassword(
                 request.MaTaiKhoan,
                 request.CurrentPassword,
                 request.NewPassword
@@ -112,14 +112,14 @@ namespace HotelManagement.Controllers
         [HttpGet("validate/username/{username}")]
         public ActionResult<ApiResponse<bool>> CheckUsername(string username)
         {
-            var response = _accountService.IsUsernameExists(username);
+            var response = _accountRepository.IsUsernameExists(username);
             return Ok(response);
         }
 
         [HttpGet("validate/email/{email}")]
         public ActionResult<ApiResponse<bool>> CheckEmail(string email)
         {
-            var response = _accountService.IsEmailExists(email);
+            var response = _accountRepository.IsEmailExists(email);
             return Ok(response);
         }
     }
