@@ -5,17 +5,17 @@ using System;
 
 namespace HotelManagement.Services
 {
-    public interface IAuthService
+    public interface IAuthRepository
     {
         TokenResponse Login(LoginRequest request);
         ApiResponse<int> Register(RegisterRequest request);
     }
 
-    public class AuthService : IAuthService
+    public class AuthRepository : IAuthRepository
     {
         private readonly DatabaseDapper _db;
 
-        public AuthService(DatabaseDapper db)
+        public AuthRepository(DatabaseDapper db)
         {
             _db = db;
         }

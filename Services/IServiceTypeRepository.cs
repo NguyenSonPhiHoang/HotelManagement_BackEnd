@@ -7,7 +7,7 @@ using HotelManagement.Model;
 
 namespace HotelManagement.Services
 {
-    public interface IServiceTypeService
+    public interface IServiceTypeRepository
     {
         ApiResponse<IEnumerable<ServiceType>> GetAllServiceTypes();
         ApiResponse<ServiceType> GetServiceTypeById(int maLoaiDichVu);
@@ -15,11 +15,11 @@ namespace HotelManagement.Services
         ApiResponse<ServiceType> UpdateServiceType(int maLoaiDichVu, UpdateServiceType serviceType);
         ApiResponse<int> DeleteServiceType(int maLoaiDichVu);
     }
-    public class ServiceTypeService : IServiceTypeService
+    public class ServiceTypeRepository : IServiceTypeRepository
     {
         private readonly DatabaseDapper _db;
 
-        public ServiceTypeService(DatabaseDapper db)
+        public ServiceTypeRepository(DatabaseDapper db)
         {
             _db = db;
         }

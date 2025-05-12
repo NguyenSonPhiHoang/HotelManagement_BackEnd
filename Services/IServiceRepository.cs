@@ -3,7 +3,7 @@ using HotelManagement.Model;
 
 namespace HotelManagement.Services
 {
-    public interface IServiceService
+    public interface IServiceRepository
     {
         ApiResponse<List<Service>> GetAllServices();
         ApiResponse<Service> GetServiceById(int maDichVu);
@@ -12,11 +12,11 @@ namespace HotelManagement.Services
         ApiResponse<int> DeleteService(int maDichVu);
     }
 
-    public class ServiceService : IServiceService
+    public class ServiceRepository : IServiceRepository
     {
         private readonly DatabaseDapper _db;
 
-        public ServiceService(DatabaseDapper db)
+        public ServiceRepository(DatabaseDapper db)
         {
             _db = db;
         }
