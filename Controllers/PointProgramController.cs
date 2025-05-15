@@ -2,6 +2,7 @@ using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -19,60 +20,64 @@ namespace HotelManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PointProgram pointProgram)
         {
-            try
+            var response = await _repository.CreateAsync(pointProgram);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+
+            return StatusCode(201, new
             {
-                var maCT = await _repository.CreateAsync(pointProgram);
-                return CreatedAtAction(nameof(GetById), new { maCT }, new { MaCT = maCT });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{maCT}")]
         public async Task<IActionResult> Update(int maCT, [FromBody] PointProgram pointProgram)
         {
-            try
+            if (maCT != pointProgram.MaCT)
+                return StatusCode(400, new { success = false, message = "Mã chương trình điểm không khớp", data = false });
+
+            var response = await _repository.UpdateAsync(pointProgram);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                pointProgram.MaCT = maCT;
-                await _repository.UpdateAsync(pointProgram);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{maCT}")]
         public async Task<IActionResult> Delete(int maCT)
         {
-            try
+            var response = await _repository.DeleteAsync(maCT);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                await _repository.DeleteAsync(maCT);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{maCT}")]
         public async Task<IActionResult> GetById(int maCT)
         {
-            try
+            var response = await _repository.GetByIdAsync(maCT);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (PointProgram)null });
+
+            return StatusCode(200, new
             {
-                var pointProgram = await _repository.GetByIdAsync(maCT);
-                if (pointProgram == null)
-                    return NotFound();
-                return Ok(pointProgram);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet]
@@ -81,21 +86,19 @@ namespace HotelManagement.Controllers
             [FromQuery, Range(1, 100)] int pageSize = 10,
             [FromQuery] string? searchTerm = null)
         {
-            try
+            var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm);
+            if (!result.Success)
+                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<PointProgram>)null });
+
+            return StatusCode(200, new
             {
-                var (items, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm);
-                return Ok(new
-                {
-                    Items = items,
-                    TotalCount = totalCount,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
+            });
         }
     }
 }

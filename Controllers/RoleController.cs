@@ -1,6 +1,7 @@
 ﻿using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -16,43 +17,81 @@ namespace HotelManagement.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAllRoles()
+        public async Task<IActionResult> GetAllRoles()
         {
-            var response = _roleRepository.GetAllRoles();
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _roleRepository.GetAllAsync();
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (IEnumerable<Role>)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{maVaiTro}")]
-        public IActionResult GetRoleById(string maVaiTro)
+        public async Task<IActionResult> GetRoleById(string maVaiTro)
         {
-            var response = _roleRepository.GetRoleById(maVaiTro);
-            return response.Success ? Ok(response) : NotFound(response);
+            var response = await _roleRepository.GetByIdAsync(maVaiTro);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (Role)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPost]
-        public IActionResult CreateRole([FromBody] Role role)
+        public async Task<IActionResult> CreateRole([FromBody] Role role)
         {
-            var response = _roleRepository.CreateRole(role);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _roleRepository.CreateAsync(role);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+
+            return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{maVaiTro}")]
-        public IActionResult UpdateRole(string maVaiTro, [FromBody] Role role)
+        public async Task<IActionResult> UpdateRole(string maVaiTro, [FromBody] Role role)
         {
             if (maVaiTro != role.MaVaiTro)
-            {
-                return BadRequest(ApiResponse<string>.ErrorResponse("Mã vai trò không khớp"));
-            }
+                return StatusCode(400, new { success = false, message = "Mã vai trò không khớp", data = false });
 
-            var response = _roleRepository.UpdateRole(role);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _roleRepository.UpdateAsync(role);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{maVaiTro}")]
-        public IActionResult DeleteRole(string maVaiTro)
+        public async Task<IActionResult> DeleteRole(string maVaiTro)
         {
-            var response = _roleRepository.DeleteRole(maVaiTro);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _roleRepository.DeleteAsync(maVaiTro);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
 }

@@ -1,20 +1,20 @@
+using HotelManagement.DataReader;
+using HotelManagement.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
-using HotelManagement.DataReader;
-using HotelManagement.Model;
 
 namespace HotelManagement.Services
 {
     public interface IRoomTypeRepository
     {
-        Task<(ApiResponse<List<RoomType>> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, string? searchTerm = null);
+        Task<(ApiResponse<IEnumerable<RoomType>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null);
         Task<ApiResponse<RoomType>> GetByIdAsync(int maLoaiPhong);
         Task<ApiResponse<int>> CreateAsync(RoomType roomType);
-        Task<ApiResponse<int>> UpdateAsync(RoomType roomType);
-        Task<ApiResponse<int>> DeleteAsync(int maLoaiPhong);
+        Task<ApiResponse<bool>> UpdateAsync(RoomType roomType);
+        Task<ApiResponse<bool>> DeleteAsync(int maLoaiPhong);
     }
 
     public class RoomTypeRepository : IRoomTypeRepository
@@ -26,7 +26,8 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<(ApiResponse<List<RoomType>> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, string? searchTerm = null)
+        public async Task<(ApiResponse<IEnumerable<RoomType>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null)
         {
             try
             {
@@ -36,11 +37,11 @@ namespace HotelManagement.Services
                 var items = (await reader.ReadAsync<RoomType>()).ToList();
                 var totalCount = await reader.ReadSingleAsync<int>();
 
-                return (ApiResponse<List<RoomType>>.SuccessResponse(items, "Lấy danh sách loại phòng thành công"), totalCount);
+                return (ApiResponse<IEnumerable<RoomType>>.SuccessResponse(items, "Lấy danh sách loại phòng thành công"), totalCount);
             }
             catch (Exception ex)
             {
-                return (ApiResponse<List<RoomType>>.ErrorResponse("Đã xảy ra lỗi: " + ex.Message), 0);
+                return (ApiResponse<IEnumerable<RoomType>>.ErrorResponse($"Lỗi khi lấy danh sách loại phòng: {ex.Message}"), 0);
             }
         }
 
@@ -49,17 +50,14 @@ namespace HotelManagement.Services
             try
             {
                 var roomType = await _db.QueryFirstOrDefaultStoredProcedureAsync<RoomType>("sp_RoomType_GetById", new { MaLoaiPhong = maLoaiPhong });
-
                 if (roomType == null)
-                {
                     return ApiResponse<RoomType>.ErrorResponse($"Không tìm thấy loại phòng với mã {maLoaiPhong}");
-                }
 
                 return ApiResponse<RoomType>.SuccessResponse(roomType, "Lấy thông tin loại phòng thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<RoomType>.ErrorResponse("Đã xảy ra lỗi: " + ex.Message);
+                return ApiResponse<RoomType>.ErrorResponse($"Lỗi khi lấy thông tin loại phòng: {ex.Message}");
             }
         }
 
@@ -79,11 +77,11 @@ namespace HotelManagement.Services
             }
             catch (Exception ex)
             {
-                return ApiResponse<int>.ErrorResponse("Đã xảy ra lỗi: " + ex.Message);
+                return ApiResponse<int>.ErrorResponse($"Lỗi khi tạo loại phòng: {ex.Message}");
             }
         }
 
-        public async Task<ApiResponse<int>> UpdateAsync(RoomType roomType)
+        public async Task<ApiResponse<bool>> UpdateAsync(RoomType roomType)
         {
             try
             {
@@ -95,25 +93,31 @@ namespace HotelManagement.Services
                     roomType.MoTa
                 };
 
-                var maLoaiPhong = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_RoomType_Update", parameters);
-                return ApiResponse<int>.SuccessResponse(maLoaiPhong, "Cập nhật loại phòng thành công");
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_RoomType_Update", parameters);
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Cập nhật loại phòng thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Cập nhật loại phòng thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<int>.ErrorResponse("Đã xảy ra lỗi: " + ex.Message);
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi cập nhật loại phòng: {ex.Message}");
             }
         }
 
-        public async Task<ApiResponse<int>> DeleteAsync(int maLoaiPhong)
+        public async Task<ApiResponse<bool>> DeleteAsync(int maLoaiPhong)
         {
             try
             {
-                await _db.ExecuteStoredProcedureAsync("sp_RoomType_Delete", new { MaLoaiPhong = maLoaiPhong });
-                return ApiResponse<int>.SuccessResponse(maLoaiPhong, "Xóa loại phòng thành công");
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_RoomType_Delete", new { MaLoaiPhong = maLoaiPhong });
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Xóa loại phòng thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Xóa loại phòng thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<int>.ErrorResponse("Đã xảy ra lỗi: " + ex.Message);
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xóa loại phòng: {ex.Message}");
             }
         }
     }

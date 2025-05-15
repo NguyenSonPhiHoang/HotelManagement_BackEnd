@@ -1,6 +1,7 @@
 using HotelManagement.Model;
-using HotelManagement.Services; 
+using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -16,46 +17,86 @@ namespace HotelManagement.Controllers
         }
 
         [HttpGet]
-        public ActionResult<ApiResponse<IEnumerable<Service>>> GetAllServices()
+        public async Task<IActionResult> GetAllServices()
         {
-            var response = _serviceRepository.GetAllServices();
-            return response.Success ? Ok(response) : StatusCode(500, response);
+            var response = await _serviceRepository.GetAllAsync();
+            if (!response.Success)
+                return StatusCode(500, new { success = false, message = response.Message, data = (IEnumerable<Service>)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{id}")]
-        public ActionResult<ApiResponse<Service>> GetServiceById(int id)
+        public async Task<IActionResult> GetServiceById(int id)
         {
-            var response = _serviceRepository.GetServiceById(id);
-            return response.Success ? Ok(response) : NotFound(response);
+            var response = await _serviceRepository.GetByIdAsync(id);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (Service)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPost]
-        public ActionResult<ApiResponse<int>> CreateService([FromBody] AddService service)
+        public async Task<IActionResult> CreateService([FromBody] AddService service)
         {
-            var response = _serviceRepository.CreateService(service);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _serviceRepository.CreateAsync(service);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (Service)null });
+
+            return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{id}")]
-        public ActionResult<ApiResponse<int>> UpdateService(int id, [FromBody] UpdateService service)
+        public async Task<IActionResult> UpdateService(int id, [FromBody] UpdateService service)
         {
-            var existingService = _serviceRepository.GetServiceById(id);
+            var existingService = await _serviceRepository.GetByIdAsync(id);
             if (!existingService.Success)
-                return NotFound(ApiResponse<int>.ErrorResponse("Không tìm thấy dịch vụ"));
+                return StatusCode(404, new { success = false, message = "Không tìm thấy dịch vụ", data = (Service)null });
 
-            var response = _serviceRepository.UpdateService(id, service);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _serviceRepository.UpdateAsync(id, service);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (Service)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<ApiResponse<int>> DeleteService(int id)
+        public async Task<IActionResult> DeleteService(int id)
         {
-            var existingService = _serviceRepository.GetServiceById(id);
+            var existingService = await _serviceRepository.GetByIdAsync(id);
             if (!existingService.Success)
-                return NotFound(ApiResponse<int>.ErrorResponse("Không tìm thấy dịch vụ"));
+                return StatusCode(404, new { success = false, message = "Không tìm thấy dịch vụ", data = false });
 
-            var response = _serviceRepository.DeleteService(id);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _serviceRepository.DeleteAsync(id);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
 }

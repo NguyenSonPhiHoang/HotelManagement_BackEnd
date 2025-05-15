@@ -2,6 +2,7 @@ using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -17,85 +18,87 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] BookingService bookingService)
+        public async Task<IActionResult> Create([FromBody] BookingService bookingService)
         {
-            try
+            var response = await _repository.CreateAsync(bookingService);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+
+            return StatusCode(201, new
             {
-                var maBSD = _repository.Create(bookingService);
-                return CreatedAtAction(nameof(GetById), new { maBSD }, new { MaBSD = maBSD });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{maBSD}")]
-        public IActionResult Update(int maBSD, [FromBody] BookingService bookingService)
+        public async Task<IActionResult> Update(int maBSD, [FromBody] BookingService bookingService)
         {
-            try
+            if (maBSD != bookingService.MaBSD)
+                return StatusCode(400, new { success = false, message = "Mã dịch vụ đặt phòng không khớp", data = false });
+
+            var response = await _repository.UpdateAsync(bookingService);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                bookingService.MaBSD = maBSD;
-                _repository.Update(bookingService);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{maBSD}")]
-        public IActionResult Delete(int maBSD)
+        public async Task<IActionResult> Delete(int maBSD)
         {
-            try
+            var response = await _repository.DeleteAsync(maBSD);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                _repository.Delete(maBSD);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{maBSD}")]
-        public IActionResult GetById(int maBSD)
+        public async Task<IActionResult> GetById(int maBSD)
         {
-            try
+            var response = await _repository.GetByIdAsync(maBSD);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (BookingService)null });
+
+            return StatusCode(200, new
             {
-                var bookingService = _repository.GetById(maBSD);
-                if (bookingService == null)
-                    return NotFound();
-                return Ok(bookingService);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet]
-        public IActionResult GetAll(
+        public async Task<IActionResult> GetAll(
             [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1,
             [FromQuery, Range(1, 100)] int pageSize = 10,
             [FromQuery] string? searchTerm = null)
         {
-            try
+            var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm);
+            if (!result.Success)
+                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<BookingService>)null });
+
+            return StatusCode(200, new
             {
-                var (items, totalCount) = _repository.GetAll(pageNumber, pageSize, searchTerm);
-                return Ok(new
-                {
-                    Items = items,
-                    TotalCount = totalCount,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
+            });
         }
     }
 }

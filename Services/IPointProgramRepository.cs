@@ -1,16 +1,22 @@
-using HotelManagement.Model;
 using HotelManagement.DataReader;
+using HotelManagement.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Services
 {
     public interface IPointProgramRepository
     {
-        Task<int> CreateAsync(PointProgram pointProgram);
-        Task UpdateAsync(PointProgram pointProgram);
-        Task DeleteAsync(int maCT);
-        Task<PointProgram> GetByIdAsync(int maCT);
-        Task<(IEnumerable<PointProgram> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, string? searchTerm = null);
+        Task<ApiResponse<int>> CreateAsync(PointProgram pointProgram);
+        Task<ApiResponse<bool>> UpdateAsync(PointProgram pointProgram);
+        Task<ApiResponse<bool>> DeleteAsync(int maCT);
+        Task<ApiResponse<PointProgram>> GetByIdAsync(int maCT);
+        Task<(ApiResponse<IEnumerable<PointProgram>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null);
     }
+
     public class PointProgramRepository : IPointProgramRepository
     {
         private readonly DatabaseDapper _db;
@@ -20,50 +26,99 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<int> CreateAsync(PointProgram pointProgram)
+        public async Task<ApiResponse<int>> CreateAsync(PointProgram pointProgram)
         {
-            var parameters = new
+            try
             {
-                pointProgram.TenCT,
-                pointProgram.DiemToiThieu,
-                pointProgram.MucGiamGia
-            };
+                var parameters = new
+                {
+                    pointProgram.TenCT,
+                    pointProgram.DiemToiThieu,
+                    pointProgram.MucGiamGia
+                };
 
-            return await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_PointProgram_Create", parameters);
-        }
-
-        public async Task UpdateAsync(PointProgram pointProgram)
-        {
-            var parameters = new
+                var maCT = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_PointProgram_Create", parameters);
+                return ApiResponse<int>.SuccessResponse(maCT, "Tạo chương trình điểm thành công");
+            }
+            catch (Exception ex)
             {
-                pointProgram.MaCT,
-                pointProgram.TenCT,
-                pointProgram.DiemToiThieu,
-                pointProgram.MucGiamGia
-            };
-
-            await _db.ExecuteStoredProcedureAsync("sp_PointProgram_Update", parameters);
+                return ApiResponse<int>.ErrorResponse($"Lỗi khi tạo chương trình điểm: {ex.Message}");
+            }
         }
 
-        public async Task DeleteAsync(int maCT)
+        public async Task<ApiResponse<bool>> UpdateAsync(PointProgram pointProgram)
         {
-            await _db.ExecuteStoredProcedureAsync("sp_PointProgram_Delete", new { MaCT = maCT });
+            try
+            {
+                var parameters = new
+                {
+                    pointProgram.MaCT,
+                    pointProgram.TenCT,
+                    pointProgram.DiemToiThieu,
+                    pointProgram.MucGiamGia
+                };
+
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_PointProgram_Update", parameters);
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Cập nhật chương trình điểm thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Cập nhật chương trình điểm thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi cập nhật chương trình điểm: {ex.Message}");
+            }
         }
 
-        public async Task<PointProgram> GetByIdAsync(int maCT)
+        public async Task<ApiResponse<bool>> DeleteAsync(int maCT)
         {
-            return await _db.QueryFirstOrDefaultStoredProcedureAsync<PointProgram>("sp_PointProgram_GetById", new { MaCT = maCT });
+            try
+            {
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_PointProgram_Delete", new { MaCT = maCT });
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Xóa chương trình điểm thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Xóa chương trình điểm thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xóa chương trình điểm: {ex.Message}");
+            }
         }
 
-        public async Task<(IEnumerable<PointProgram> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, string? searchTerm = null)
+        public async Task<ApiResponse<PointProgram>> GetByIdAsync(int maCT)
         {
-            using var reader = await _db.QueryMultipleAsync("sp_PointProgram_GetAll",
-                new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+            try
+            {
+                var pointProgram = await _db.QueryFirstOrDefaultStoredProcedureAsync<PointProgram>("sp_PointProgram_GetById", new { MaCT = maCT });
+                if (pointProgram == null)
+                    return ApiResponse<PointProgram>.ErrorResponse("Không tìm thấy chương trình điểm");
 
-            var items = await reader.ReadAsync<PointProgram>();
-            var totalCount = await reader.ReadSingleAsync<int>();
+                return ApiResponse<PointProgram>.SuccessResponse(pointProgram, "Lấy thông tin chương trình điểm thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<PointProgram>.ErrorResponse($"Lỗi khi lấy thông tin chương trình điểm: {ex.Message}");
+            }
+        }
 
-            return (items, totalCount);
+        public async Task<(ApiResponse<IEnumerable<PointProgram>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null)
+        {
+            try
+            {
+                using var reader = await _db.QueryMultipleAsync("sp_PointProgram_GetAll",
+                    new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+
+                var items = (await reader.ReadAsync<PointProgram>()).ToList();
+                var totalCount = await reader.ReadSingleAsync<int>();
+
+                return (ApiResponse<IEnumerable<PointProgram>>.SuccessResponse(items, "Lấy danh sách chương trình điểm thành công"), totalCount);
+            }
+            catch (Exception ex)
+            {
+                return (ApiResponse<IEnumerable<PointProgram>>.ErrorResponse($"Lỗi khi lấy danh sách chương trình điểm: {ex.Message}"), 0);
+            }
         }
     }
 }

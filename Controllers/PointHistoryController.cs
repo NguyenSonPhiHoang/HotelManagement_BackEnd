@@ -2,6 +2,7 @@ using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -19,60 +20,64 @@ namespace HotelManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PointHistory pointHistory)
         {
-            try
+            var response = await _repository.CreateAsync(pointHistory);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+
+            return StatusCode(201, new
             {
-                var maLSTD = await _repository.CreateAsync(pointHistory);
-                return CreatedAtAction(nameof(GetById), new { maLSTD }, new { MaLSTD = maLSTD });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{maLSTD}")]
         public async Task<IActionResult> Update(int maLSTD, [FromBody] PointHistory pointHistory)
         {
-            try
+            if (maLSTD != pointHistory.MaLSTD)
+                return StatusCode(400, new { success = false, message = "Mã lịch sử điểm không khớp", data = false });
+
+            var response = await _repository.UpdateAsync(pointHistory);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                pointHistory.MaLSTD = maLSTD;
-                await _repository.UpdateAsync(pointHistory);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{maLSTD}")]
         public async Task<IActionResult> Delete(int maLSTD)
         {
-            try
+            var response = await _repository.DeleteAsync(maLSTD);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                await _repository.DeleteAsync(maLSTD);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{maLSTD}")]
         public async Task<IActionResult> GetById(int maLSTD)
         {
-            try
+            var response = await _repository.GetByIdAsync(maLSTD);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (PointHistory)null });
+
+            return StatusCode(200, new
             {
-                var pointHistory = await _repository.GetByIdAsync(maLSTD);
-                if (pointHistory == null)
-                    return NotFound();
-                return Ok(pointHistory);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet]
@@ -81,21 +86,19 @@ namespace HotelManagement.Controllers
             [FromQuery, Range(1, 100)] int pageSize = 10,
             [FromQuery] string? searchTerm = null)
         {
-            try
+            var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm);
+            if (!result.Success)
+                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<PointHistory>)null });
+
+            return StatusCode(200, new
             {
-                var (items, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm);
-                return Ok(new
-                {
-                    Items = items,
-                    TotalCount = totalCount,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
+            });
         }
     }
 }

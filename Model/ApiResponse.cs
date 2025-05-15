@@ -1,29 +1,29 @@
-﻿namespace HotelManagement.Model
-{
-    public class ApiResponse<T>
+﻿    namespace HotelManagement.Model
     {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-        public T Data { get; set; }
-
-        public static ApiResponse<T> SuccessResponse(T data, string message = "Thành công")
+        public class ApiResponse<T>
         {
-            return new ApiResponse<T>
-            {
-                Success = true,
-                Message = message,
-                Data = data
-            };
-        }
+            public bool Success { get; set; }
+            public string Message { get; set; }
+            public T Data { get; set; }
 
-        public static ApiResponse<T> ErrorResponse(string message = "Lỗi")
-        {
-            return new ApiResponse<T>
+            public static ApiResponse<T> SuccessResponse(T data, string message = "Thành công")
             {
-                Success = false,
-                Message = message,
-                Data = default
-            };
+                return new ApiResponse<T>
+                {
+                    Success = true,
+                    Message = message,
+                    Data = data
+                };
+            }
+
+            public static ApiResponse<T> ErrorResponse(string message = "Lỗi")
+            {
+                return new ApiResponse<T>
+                {
+                    Success = false,
+                    Message = message,
+                    Data = default
+                };
+            }
         }
     }
-}

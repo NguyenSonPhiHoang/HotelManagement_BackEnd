@@ -3,19 +3,20 @@ using HotelManagement.Model;
 using HotelManagement.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Services
 {
     public interface ICustomerRepository
     {
-        ApiResponse<IEnumerable<Customer>> GetAllCustomers();
-        ApiResponse<Customer> GetCustomerById(string id);
-        ApiResponse<string> CreateCustomer(AddCustomer customer);
-        ApiResponse<bool> UpdateCustomer(Customer customer);
-        ApiResponse<bool> DeleteCustomer(string id);
-        ApiResponse<bool> IsEmailExists(string email);
-        ApiResponse<bool> IsPhoneExists(string phone);
-        ApiResponse<bool> AddPoints(string customerId, int points);
+        Task<ApiResponse<IEnumerable<Customer>>> GetAllAsync();
+        Task<ApiResponse<Customer>> GetByIdAsync(string id);
+        Task<ApiResponse<string>> CreateAsync(AddCustomer customer);
+        Task<ApiResponse<bool>> UpdateAsync(Customer customer);
+        Task<ApiResponse<bool>> DeleteAsync(string id);
+        Task<ApiResponse<bool>> IsEmailExistsAsync(string email);
+        Task<ApiResponse<bool>> IsPhoneExistsAsync(string phone);
+        Task<ApiResponse<bool>> AddPointsAsync(string customerId, int points);
     }
 
     public class CustomerRepository : ICustomerRepository
@@ -24,29 +25,27 @@ namespace HotelManagement.Services
 
         public CustomerRepository(DatabaseDapper db)
         {
-            _db = db ;
+            _db = db;
         }
 
-        public ApiResponse<IEnumerable<Customer>> GetAllCustomers()
+        public async Task<ApiResponse<IEnumerable<Customer>>> GetAllAsync()
         {
             try
             {
-                var customers = _db.QueryStoredProcedure<Customer>("sp_Customer_GetAll");
+                var customers = await _db.QueryStoredProcedureAsync<Customer>("sp_Customer_GetAll");
                 return ApiResponse<IEnumerable<Customer>>.SuccessResponse(customers, "Lấy danh sách khách hàng thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<IEnumerable<Customer>>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<IEnumerable<Customer>>.ErrorResponse($"Lỗi khi lấy danh sách khách hàng: {ex.Message}");
             }
         }
 
-        public ApiResponse<Customer> GetCustomerById(string id)
+        public async Task<ApiResponse<Customer>> GetByIdAsync(string id)
         {
             try
             {
-                var customer = _db.QueryFirstOrDefaultStoredProcedure<Customer>("sp_Customer_GetById",
-                    new { MaKhachHang = id });
-
+                var customer = await _db.QueryFirstOrDefaultStoredProcedureAsync<Customer>("sp_Customer_GetById", new { MaKhachHang = id });
                 if (customer == null)
                     return ApiResponse<Customer>.ErrorResponse("Không tìm thấy khách hàng");
 
@@ -54,11 +53,11 @@ namespace HotelManagement.Services
             }
             catch (Exception ex)
             {
-                return ApiResponse<Customer>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<Customer>.ErrorResponse($"Lỗi khi lấy thông tin khách hàng: {ex.Message}");
             }
         }
 
-        public ApiResponse<string> CreateCustomer(AddCustomer addCustomer)
+        public async Task<ApiResponse<string>> CreateAsync(AddCustomer addCustomer)
         {
             try
             {
@@ -70,16 +69,16 @@ namespace HotelManagement.Services
                     addCustomer.MaCT
                 };
 
-                var newId = _db.QueryFirstOrDefaultStoredProcedure<string>("sp_Customer_Insert", parameters);
+                var newId = await _db.QueryFirstOrDefaultStoredProcedureAsync<string>("sp_Customer_Insert", parameters);
                 return ApiResponse<string>.SuccessResponse(newId, "Tạo khách hàng thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<string>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<string>.ErrorResponse($"Lỗi khi tạo khách hàng: {ex.Message}");
             }
         }
 
-        public ApiResponse<bool> UpdateCustomer(Customer customer)
+        public async Task<ApiResponse<bool>> UpdateAsync(Customer customer)
         {
             try
             {
@@ -92,8 +91,7 @@ namespace HotelManagement.Services
                     customer.MaCT
                 };
 
-                int rowsAffected = _db.ExecuteStoredProcedure("sp_Customer_Update", parameters);
-
+                int rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Customer_Update", parameters);
                 if (rowsAffected <= 0)
                     return ApiResponse<bool>.ErrorResponse("Cập nhật khách hàng thất bại");
 
@@ -101,17 +99,15 @@ namespace HotelManagement.Services
             }
             catch (Exception ex)
             {
-                return ApiResponse<bool>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi cập nhật khách hàng: {ex.Message}");
             }
         }
 
-        public ApiResponse<bool> DeleteCustomer(string id)
+        public async Task<ApiResponse<bool>> DeleteAsync(string id)
         {
             try
             {
-                int rowsAffected = _db.ExecuteStoredProcedure("sp_Customer_Delete",
-                    new { MaKhachHang = id });
-
+                int rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Customer_Delete", new { MaKhachHang = id });
                 if (rowsAffected <= 0)
                     return ApiResponse<bool>.ErrorResponse("Xóa khách hàng thất bại");
 
@@ -119,47 +115,47 @@ namespace HotelManagement.Services
             }
             catch (Exception ex)
             {
-                return ApiResponse<bool>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xóa khách hàng: {ex.Message}");
             }
         }
 
-        public ApiResponse<bool> IsEmailExists(string email)
+        public async Task<ApiResponse<bool>> IsEmailExistsAsync(string email)
         {
             try
             {
-                var customer = _db.QueryFirstOrDefault<Customer>(
+                var customer = await _db.QueryFirstOrDefaultAsync<Customer>(
                     "SELECT TOP 1 MaKhachHang FROM Customer WHERE Email = @Email",
                     new { Email = email });
 
-                return ApiResponse<bool>.SuccessResponse(customer != null);
+                return ApiResponse<bool>.SuccessResponse(customer != null, customer != null ? "Email đã tồn tại" : "Email hợp lệ");
             }
             catch (Exception ex)
             {
-                return ApiResponse<bool>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi kiểm tra email: {ex.Message}");
             }
         }
 
-        public ApiResponse<bool> IsPhoneExists(string phone)
+        public async Task<ApiResponse<bool>> IsPhoneExistsAsync(string phone)
         {
             try
             {
-                var customer = _db.QueryFirstOrDefault<Customer>(
+                var customer = await _db.QueryFirstOrDefaultAsync<Customer>(
                     "SELECT TOP 1 MaKhachHang FROM Customer WHERE DienThoai = @DienThoai",
                     new { DienThoai = phone });
 
-                return ApiResponse<bool>.SuccessResponse(customer != null);
+                return ApiResponse<bool>.SuccessResponse(customer != null, customer != null ? "Số điện thoại đã tồn tại" : "Số điện thoại hợp lệ");
             }
             catch (Exception ex)
             {
-                return ApiResponse<bool>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi kiểm tra số điện thoại: {ex.Message}");
             }
         }
 
-        public ApiResponse<bool> AddPoints(string customerId, int points)
+        public async Task<ApiResponse<bool>> AddPointsAsync(string customerId, int points)
         {
             try
             {
-                int rowsAffected = _db.ExecuteStoredProcedure("sp_Customer_AddPoints",
+                int rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Customer_AddPoints",
                     new { MaKhachHang = customerId, SoDiemThem = points });
 
                 if (rowsAffected <= 0)
@@ -169,7 +165,7 @@ namespace HotelManagement.Services
             }
             catch (Exception ex)
             {
-                return ApiResponse<bool>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi thêm điểm: {ex.Message}");
             }
         }
     }

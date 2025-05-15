@@ -21,4 +21,5 @@
         public string Phone { get; set; }
         public int MaVaiTro { get; set; }
     }
+    
 }
