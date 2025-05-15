@@ -1,20 +1,21 @@
+using HotelManagement.DataReader;
+using HotelManagement.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HotelManagement.DataReader;
-using HotelManagement.Model;
 
 namespace HotelManagement.Services
 {
     public interface IServiceTypeRepository
     {
-        ApiResponse<IEnumerable<ServiceType>> GetAllServiceTypes();
-        ApiResponse<ServiceType> GetServiceTypeById(int maLoaiDichVu);
-        ApiResponse<ServiceType> CreateServiceType(AddServiceType serviceType);
-        ApiResponse<ServiceType> UpdateServiceType(int maLoaiDichVu, UpdateServiceType serviceType);
-        ApiResponse<int> DeleteServiceType(int maLoaiDichVu);
+        Task<ApiResponse<IEnumerable<ServiceType>>> GetAllAsync();
+        Task<ApiResponse<ServiceType>> GetByIdAsync(int maLoaiDichVu);
+        Task<ApiResponse<ServiceType>> CreateAsync(AddServiceType serviceType);
+        Task<ApiResponse<ServiceType>> UpdateAsync(int maLoaiDichVu, UpdateServiceType serviceType);
+        Task<ApiResponse<bool>> DeleteAsync(int maLoaiDichVu);
     }
+
     public class ServiceTypeRepository : IServiceTypeRepository
     {
         private readonly DatabaseDapper _db;
@@ -24,111 +25,97 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public ApiResponse<IEnumerable<ServiceType>> GetAllServiceTypes()
+        public async Task<ApiResponse<IEnumerable<ServiceType>>> GetAllAsync()
         {
             try
             {
-                var serviceTypes = _db.QueryStoredProcedure<ServiceType>("sp_GetAllServiceTypes").ToList();
-                return serviceTypes.Count != 0
-                    ? ApiResponse<IEnumerable<ServiceType>>.SuccessResponse(serviceTypes, "Lấy danh sách loại dịch vụ thành công")
-                    : ApiResponse<IEnumerable<ServiceType>>.ErrorResponse("Không có loại dịch vụ nào");
+                var serviceTypes = await _db.QueryStoredProcedureAsync<ServiceType>("sp_GetAllServiceTypes");
+                return ApiResponse<IEnumerable<ServiceType>>.SuccessResponse(serviceTypes, "Lấy danh sách loại dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<IEnumerable<ServiceType>>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<IEnumerable<ServiceType>>.ErrorResponse($"Lỗi khi lấy danh sách loại dịch vụ: {ex.Message}");
             }
         }
 
-        public ApiResponse<ServiceType> GetServiceTypeById(int maLoaiDV)
+        public async Task<ApiResponse<ServiceType>> GetByIdAsync(int maLoaiDichVu)
         {
             try
             {
-                var serviceType = _db.QueryFirstOrDefaultStoredProcedure<ServiceType>(
-                    "sp_GetServiceTypeById",
-                    new { MaLoaiDV = maLoaiDV }
-                );
+                var serviceType = await _db.QueryFirstOrDefaultStoredProcedureAsync<ServiceType>("sp_GetServiceTypeById", new { MaLoaiDV = maLoaiDichVu });
+                if (serviceType == null)
+                    return ApiResponse<ServiceType>.ErrorResponse("Không tìm thấy loại dịch vụ");
 
-                return serviceType != null
-                    ? ApiResponse<ServiceType>.SuccessResponse(serviceType, "Lấy loại dịch vụ thành công")
-                    : ApiResponse<ServiceType>.ErrorResponse("Không tìm thấy loại dịch vụ");
+                return ApiResponse<ServiceType>.SuccessResponse(serviceType, "Lấy thông tin loại dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<ServiceType>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<ServiceType>.ErrorResponse($"Lỗi khi lấy thông tin loại dịch vụ: {ex.Message}");
             }
         }
 
-        public ApiResponse<ServiceType> CreateServiceType(AddServiceType serviceType)
-        {
-            if (string.IsNullOrWhiteSpace(serviceType.TenLoaiDV))
-            {
-                return ApiResponse<ServiceType>.ErrorResponse("Tên loại dịch vụ không được để trống");
-            }
-
-            try
-            {
-                var result = _db.QueryFirstOrDefault<ServiceType>(
-                    "sp_CreateServiceType",
-                    new
-                    {
-                        TenLoaiDV = serviceType.TenLoaiDV,
-                        MoTa = serviceType.MoTa
-                    }
-                );
-
-                return result != null
-                    ? ApiResponse<ServiceType>.SuccessResponse(result, "Tạo loại dịch vụ thành công")
-                    : ApiResponse<ServiceType>.ErrorResponse("Tạo loại dịch vụ thất bại");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<ServiceType>.ErrorResponse($"Lỗi: {ex.Message}");
-            }
-        }
-
-        public ApiResponse<ServiceType> UpdateServiceType(int maLoaiDV, UpdateServiceType serviceType)
+        public async Task<ApiResponse<ServiceType>> CreateAsync(AddServiceType serviceType)
         {
             try
             {
-                var result = _db.QueryFirstOrDefault<ServiceType>(
-                    "sp_UpdateServiceType",
-                    new
-                    {
-                        MaLoaiDV = maLoaiDV,
-                        TenLoaiDV = serviceType.TenLoaiDV,
-                        MoTa = serviceType.MoTa
-                    }
-                );
+                if (string.IsNullOrWhiteSpace(serviceType.TenLoaiDV))
+                    return ApiResponse<ServiceType>.ErrorResponse("Tên loại dịch vụ không được để trống");
 
-                return result != null
-                    ? ApiResponse<ServiceType>.SuccessResponse(result, "Cập nhật loại dịch vụ thành công")
-                    : ApiResponse<ServiceType>.ErrorResponse("Cập nhật loại dịch vụ thất bại");
+                var parameters = new
+                {
+                    serviceType.TenLoaiDV,
+                    serviceType.MoTa
+                };
+
+                var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<ServiceType>("sp_CreateServiceType", parameters);
+                if (result == null)
+                    return ApiResponse<ServiceType>.ErrorResponse("Tạo loại dịch vụ thất bại");
+
+                return ApiResponse<ServiceType>.SuccessResponse(result, "Tạo loại dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<ServiceType>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<ServiceType>.ErrorResponse($"Lỗi khi tạo loại dịch vụ: {ex.Message}");
             }
         }
 
-        public ApiResponse<int> DeleteServiceType(int maLoaiDV)
+        public async Task<ApiResponse<ServiceType>> UpdateAsync(int maLoaiDichVu, UpdateServiceType serviceType)
         {
             try
             {
-                int result = _db.ExecuteStoredProcedure(
-                    "sp_DeleteServiceType",
-                    new { MaLoaiDV = maLoaiDV }
-                );
-         
-                return result == -1
-                    ? ApiResponse<int>.SuccessResponse(result, "Xóa loại dịch vụ thành công")
-                    : ApiResponse<int>.ErrorResponse("Xóa loại dịch vụ thất bại");
+                var parameters = new
+                {
+                    MaLoaiDV = maLoaiDichVu,
+                    serviceType.TenLoaiDV,
+                    serviceType.MoTa
+                };
+
+                var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<ServiceType>("sp_UpdateServiceType", parameters);
+                if (result == null)
+                    return ApiResponse<ServiceType>.ErrorResponse("Cập nhật loại dịch vụ thất bại");
+
+                return ApiResponse<ServiceType>.SuccessResponse(result, "Cập nhật loại dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<int>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<ServiceType>.ErrorResponse($"Lỗi khi cập nhật loại dịch vụ: {ex.Message}");
             }
         }
 
+        public async Task<ApiResponse<bool>> DeleteAsync(int maLoaiDichVu)
+        {
+            try
+            {
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_DeleteServiceType", new { MaLoaiDV = maLoaiDichVu });
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Xóa loại dịch vụ thất bại");
 
+                return ApiResponse<bool>.SuccessResponse(true, "Xóa loại dịch vụ thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xóa loại dịch vụ: {ex.Message}");
+            }
+        }
     }
 }

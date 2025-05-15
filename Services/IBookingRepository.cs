@@ -1,16 +1,22 @@
 using HotelManagement.DataReader;
 using HotelManagement.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Services
 {
     public interface IBookingRepository
     {
-        int Create(Booking booking);
-        void Update(Booking booking);
-        void Delete(int maDatPhong);
-        Booking GetById(int maDatPhong);
-        (IEnumerable<Booking> Items, int TotalCount) GetAll(int pageNumber, int pageSize, string searchTerm = null);
+        Task<ApiResponse<int>> CreateAsync(Booking booking);
+        Task<ApiResponse<bool>> UpdateAsync(Booking booking);
+        Task<ApiResponse<bool>> DeleteAsync(int maDatPhong);
+        Task<ApiResponse<Booking>> GetByIdAsync(int maDatPhong);
+        Task<(ApiResponse<IEnumerable<Booking>> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaDatPhong", string? sortOrder = "ASC");
+        Task<ApiResponse<Booking>> SearchByMaDatPhongAsync(int maDatPhong);
     }
+
     public class BookingRepository : IBookingRepository
     {
         private readonly DatabaseDapper _db;
@@ -20,56 +26,128 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public int Create(Booking booking)
+        public async Task<ApiResponse<int>> CreateAsync(Booking booking)
         {
-            var parameters = new
+            try
             {
-                booking.MaKhachHang,
-                booking.MaPhong,
-                booking.GioCheckIn,
-                booking.GioCheckOut,
-                booking.TrangThai,
-                booking.NgayDat
-            };
+                var parameters = new
+                {
+                    booking.MaKhachHang,
+                    booking.MaPhong,
+                    booking.GioCheckIn,
+                    booking.GioCheckOut,
+                    booking.TrangThai,
+                    booking.NgayDat
+                };
 
-            return _db.QueryFirstOrDefaultStoredProcedure<int>("sp_Booking_Create", parameters);
-        }
-
-        public void Update(Booking booking)
-        {
-            var parameters = new
+                var maDatPhong = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Booking_Create", parameters);
+                return ApiResponse<int>.SuccessResponse(maDatPhong, "Tạo đặt phòng thành công");
+            }
+            catch (Exception ex)
             {
-                booking.MaDatPhong,
-                booking.MaKhachHang,
-                booking.MaPhong,
-                booking.GioCheckIn,
-                booking.GioCheckOut,
-                booking.TrangThai,
-                booking.NgayDat
-            };
-
-            _db.ExecuteStoredProcedure("sp_Booking_Update", parameters);
+                return ApiResponse<int>.ErrorResponse($"Lỗi khi tạo đặt phòng: {ex.Message}");
+            }
         }
 
-        public void Delete(int maDatPhong)
+        public async Task<ApiResponse<bool>> UpdateAsync(Booking booking)
         {
-            _db.ExecuteStoredProcedure("sp_Booking_Delete", new { MaDatPhong = maDatPhong });
+            try
+            {
+                var parameters = new
+                {
+                    booking.MaDatPhong,
+                    booking.MaKhachHang,
+                    booking.MaPhong,
+                    booking.GioCheckIn,
+                    booking.GioCheckOut,
+                    booking.TrangThai,
+                    booking.NgayDat
+                };
+
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Booking_Update", parameters);
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Cập nhật đặt phòng thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Cập nhật đặt phòng thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi cập nhật đặt phòng: {ex.Message}");
+            }
         }
 
-        public Booking GetById(int maDatPhong)
+        public async Task<ApiResponse<bool>> DeleteAsync(int maDatPhong)
         {
-            return _db.QueryFirstOrDefaultStoredProcedure<Booking>("sp_Booking_GetById", new { MaDatPhong = maDatPhong });
+            try
+            {
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Booking_Delete", new { MaDatPhong = maDatPhong });
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Xóa đặt phòng thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Xóa đặt phòng thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xóa đặt phòng: {ex.Message}");
+            }
         }
 
-        public (IEnumerable<Booking> Items, int TotalCount) GetAll(int pageNumber, int pageSize, string searchTerm = null)
+        public async Task<ApiResponse<Booking>> GetByIdAsync(int maDatPhong)
         {
-            using var reader = _db.QueryMultiple("sp_Booking_GetAll",
-                new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+            try
+            {
+                var booking = await _db.QueryFirstOrDefaultStoredProcedureAsync<Booking>("sp_Booking_GetById", new { MaDatPhong = maDatPhong });
+                if (booking == null)
+                    return ApiResponse<Booking>.ErrorResponse("Không tìm thấy đặt phòng");
 
-            var items = reader.Read<Booking>().ToList();
-            var totalCount = reader.ReadSingle<int>();
+                return ApiResponse<Booking>.SuccessResponse(booking, "Lấy thông tin đặt phòng thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<Booking>.ErrorResponse($"Lỗi khi lấy thông tin đặt phòng: {ex.Message}");
+            }
+        }
 
-            return (items, totalCount);
+        public async Task<(ApiResponse<IEnumerable<Booking>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaDatPhong", string? sortOrder = "ASC")
+        {
+            try
+            {
+                using var reader = await _db.QueryMultipleAsync("sp_Booking_GetAll",
+                    new
+                    {
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        SearchTerm = searchTerm,
+                        SortBy = sortBy,
+                        SortOrder = sortOrder
+                    });
+
+                var items = (await reader.ReadAsync<Booking>()).ToList();
+                var totalCount = await reader.ReadSingleAsync<int>();
+
+                return (ApiResponse<IEnumerable<Booking>>.SuccessResponse(items, "Lấy danh sách đặt phòng thành công"), totalCount);
+            }
+            catch (Exception ex)
+            {
+                return (ApiResponse<IEnumerable<Booking>>.ErrorResponse($"Lỗi khi lấy danh sách đặt phòng: {ex.Message}"), 0);
+            }
+        }
+
+        public async Task<ApiResponse<Booking>> SearchByMaDatPhongAsync(int maDatPhong)
+        {
+            try
+            {
+                var booking = await _db.QueryFirstOrDefaultStoredProcedureAsync<Booking>("sp_Booking_SearchByMaDatPhong", new { MaDatPhong = maDatPhong });
+                if (booking == null)
+                    return ApiResponse<Booking>.ErrorResponse($"Không tìm thấy đặt phòng với mã {maDatPhong}");
+
+                return ApiResponse<Booking>.SuccessResponse(booking, "Tìm kiếm đặt phòng thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<Booking>.ErrorResponse($"Lỗi khi tìm kiếm đặt phòng: {ex.Message}");
+            }
         }
     }
 }

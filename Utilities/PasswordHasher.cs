@@ -1,5 +1,4 @@
-﻿// Utilities/PasswordHasher.cs
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 namespace HotelManagement.Utilities

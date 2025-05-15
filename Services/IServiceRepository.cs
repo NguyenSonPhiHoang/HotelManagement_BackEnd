@@ -1,15 +1,19 @@
 using HotelManagement.DataReader;
 using HotelManagement.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Services
 {
     public interface IServiceRepository
     {
-        ApiResponse<List<Service>> GetAllServices();
-        ApiResponse<Service> GetServiceById(int maDichVu);
-        ApiResponse<Service> CreateService(AddService service);
-        ApiResponse<Service> UpdateService(int maDichVu, UpdateService service);
-        ApiResponse<int> DeleteService(int maDichVu);
+        Task<ApiResponse<IEnumerable<Service>>> GetAllAsync();
+        Task<ApiResponse<Service>> GetByIdAsync(int maDichVu);
+        Task<ApiResponse<Service>> CreateAsync(AddService service);
+        Task<ApiResponse<Service>> UpdateAsync(int maDichVu, UpdateService service);
+        Task<ApiResponse<bool>> DeleteAsync(int maDichVu);
     }
 
     public class ServiceRepository : IServiceRepository
@@ -21,128 +25,107 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public ApiResponse<List<Service>> GetAllServices()
+        public async Task<ApiResponse<IEnumerable<Service>>> GetAllAsync()
         {
             try
             {
-                var services = _db.QueryStoredProcedure<Service>("sp_GetAllServices").ToList();
-                return services.Any()
-                    ? ApiResponse<List<Service>>.SuccessResponse(services, "Lấy danh sách dịch vụ thành công")
-                    : ApiResponse<List<Service>>.ErrorResponse("Không có dịch vụ nào");
+                var services = await _db.QueryStoredProcedureAsync<Service>("sp_GetAllServices");
+                return ApiResponse<IEnumerable<Service>>.SuccessResponse(services, "Lấy danh sách dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<List<Service>>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<IEnumerable<Service>>.ErrorResponse($"Lỗi khi lấy danh sách dịch vụ: {ex.Message}");
             }
         }
 
-        public ApiResponse<Service> GetServiceById(int maDichVu)
+        public async Task<ApiResponse<Service>> GetByIdAsync(int maDichVu)
         {
             try
             {
-                var service = _db.QueryFirstOrDefaultStoredProcedure<Service>(
-                    "sp_GetServiceById",
-                    new { MaDichVu = maDichVu }
-                );
+                var service = await _db.QueryFirstOrDefaultStoredProcedureAsync<Service>("sp_GetServiceById", new { MaDichVu = maDichVu });
+                if (service == null)
+                    return ApiResponse<Service>.ErrorResponse("Không tìm thấy dịch vụ");
 
-                return service != null
-                    ? ApiResponse<Service>.SuccessResponse(service, "Lấy dịch vụ thành công")
-                    : ApiResponse<Service>.ErrorResponse("Không tìm thấy dịch vụ");
+                return ApiResponse<Service>.SuccessResponse(service, "Lấy thông tin dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<Service>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<Service>.ErrorResponse($"Lỗi khi lấy thông tin dịch vụ: {ex.Message}");
             }
         }
 
-        public ApiResponse<Service> CreateService(AddService service)
+        public async Task<ApiResponse<Service>> CreateAsync(AddService service)
         {
-            // Validation
-            if (string.IsNullOrWhiteSpace(service.TenDichVu))
-            {
-                return ApiResponse<Service>.ErrorResponse("Tên dịch vụ không được để trống");
-            }
-
-            if (service.Gia <= 0)
-            {
-                return ApiResponse<Service>.ErrorResponse("Giá dịch vụ phải lớn hơn 0");
-            }
-
             try
             {
-                var result = _db.QueryFirstOrDefault<Service>(
-                    "sp_CreateService",
-                    new
-                    {
-                        TenDichVu = service.TenDichVu,
-                        MaLoaiDV = service.MaLoaiDV,
-                        Gia = service.Gia
-                    }
-                );
+                if (string.IsNullOrWhiteSpace(service.TenDichVu))
+                    return ApiResponse<Service>.ErrorResponse("Tên dịch vụ không được để trống");
 
-                return result != null
-                    ? ApiResponse<Service>.SuccessResponse(result, "Tạo dịch vụ thành công")
-                    : ApiResponse<Service>.ErrorResponse("Tạo dịch vụ thất bại");
+                if (service.Gia <= 0)
+                    return ApiResponse<Service>.ErrorResponse("Giá dịch vụ phải lớn hơn 0");
+
+                var parameters = new
+                {
+                    service.TenDichVu,
+                    service.MaLoaiDV,
+                    service.Gia
+                };
+
+                var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<Service>("sp_CreateService", parameters);
+                if (result == null)
+                    return ApiResponse<Service>.ErrorResponse("Tạo dịch vụ thất bại");
+
+                return ApiResponse<Service>.SuccessResponse(result, "Tạo dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<Service>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<Service>.ErrorResponse($"Lỗi khi tạo dịch vụ: {ex.Message}");
             }
         }
 
-        public ApiResponse<Service> UpdateService(int maDichVu, UpdateService service)
+        public async Task<ApiResponse<Service>> UpdateAsync(int maDichVu, UpdateService service)
         {
-            // Validation
-            if (maDichVu <= 0)
-            {
-                return ApiResponse<Service>.ErrorResponse("Mã dịch vụ không hợp lệ");
-            }
-
             try
             {
-                var result = _db.QueryFirstOrDefault<Service>(
-                    "sp_UpdateService",
-                    new
-                    {
-                        MaDichVu = maDichVu,
-                        TenDichVu = service.TenDichVu,
-                        MaLoaiDV = service.MaLoaiDV,
-                        Gia = service.Gia
-                    }
-                );
+                if (maDichVu <= 0)
+                    return ApiResponse<Service>.ErrorResponse("Mã dịch vụ không hợp lệ");
 
-                return result != null
-                    ? ApiResponse<Service>.SuccessResponse(result, "Cập nhật dịch vụ thành công")
-                    : ApiResponse<Service>.ErrorResponse("Cập nhật dịch vụ thất bại");
+                var parameters = new
+                {
+                    MaDichVu = maDichVu,
+                    service.TenDichVu,
+                    service.MaLoaiDV,
+                    service.Gia
+                };
+
+                var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<Service>("sp_UpdateService", parameters);
+                if (result == null)
+                    return ApiResponse<Service>.ErrorResponse("Cập nhật dịch vụ thất bại");
+
+                return ApiResponse<Service>.SuccessResponse(result, "Cập nhật dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<Service>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<Service>.ErrorResponse($"Lỗi khi cập nhật dịch vụ: {ex.Message}");
             }
         }
 
-        public ApiResponse<int> DeleteService(int maDichVu)
+        public async Task<ApiResponse<bool>> DeleteAsync(int maDichVu)
         {
-            // Validation
-            if (maDichVu <= 0)
-            {
-                return ApiResponse<int>.ErrorResponse("Mã dịch vụ không hợp lệ");
-            }
-
             try
             {
-                int result = _db.ExecuteStoredProcedure(
-                    "sp_DeleteService",
-                    new { MaDichVu = maDichVu }
-                );
+                if (maDichVu <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Mã dịch vụ không hợp lệ");
 
-                return result == -1
-                    ? ApiResponse<int>.SuccessResponse(result, "Xóa dịch vụ thành công")
-                    : ApiResponse<int>.ErrorResponse("Xóa dịch vụ thất bại");
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_DeleteService", new { MaDichVu = maDichVu });
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Xóa dịch vụ thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Xóa dịch vụ thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<int>.ErrorResponse($"Lỗi: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xóa dịch vụ: {ex.Message}");
             }
         }
     }

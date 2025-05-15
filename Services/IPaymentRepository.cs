@@ -1,16 +1,22 @@
-using HotelManagement.Model;
 using HotelManagement.DataReader;
+using HotelManagement.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Services
 {
     public interface IPaymentRepository
     {
-        Task<int> CreateAsync(Payment payment);
-        Task UpdateAsync(Payment payment);
-        Task DeleteAsync(int maThanhToan);
-        Task<Payment> GetByIdAsync(int maThanhToan);
-        Task<(IEnumerable<Payment> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, string? searchTerm = null);
+        Task<ApiResponse<int>> CreateAsync(Payment payment);
+        Task<ApiResponse<bool>> UpdateAsync(Payment payment);
+        Task<ApiResponse<bool>> DeleteAsync(int maThanhToan);
+        Task<ApiResponse<Payment>> GetByIdAsync(int maThanhToan);
+        Task<(ApiResponse<IEnumerable<Payment>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null);
     }
+
     public class PaymentRepository : IPaymentRepository
     {
         private readonly DatabaseDapper _db;
@@ -20,56 +26,105 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<int> CreateAsync(Payment payment)
+        public async Task<ApiResponse<int>> CreateAsync(Payment payment)
         {
-            var parameters = new
+            try
             {
-                payment.MaHoaDon,
-                payment.PhuongThucThanhToan,
-                payment.SoDiemSuDung,
-                payment.SoTienGiam,
-                payment.ThanhTien,
-                payment.NgayThanhToan
-            };
+                var parameters = new
+                {
+                    payment.MaHoaDon,
+                    payment.PhuongThucThanhToan,
+                    payment.SoDiemSuDung,
+                    payment.SoTienGiam,
+                    payment.ThanhTien,
+                    payment.NgayThanhToan
+                };
 
-            return await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Payment_Create", parameters);
-        }
-
-        public async Task UpdateAsync(Payment payment)
-        {
-            var parameters = new
+                var maThanhToan = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Payment_Create", parameters);
+                return ApiResponse<int>.SuccessResponse(maThanhToan, "Tạo thanh toán thành công");
+            }
+            catch (Exception ex)
             {
-                payment.MaThanhToan,
-                payment.MaHoaDon,
-                payment.PhuongThucThanhToan,
-                payment.SoDiemSuDung,
-                payment.SoTienGiam,
-                payment.ThanhTien,
-                payment.NgayThanhToan
-            };
-
-            await _db.ExecuteStoredProcedureAsync("sp_Payment_Update", parameters);
+                return ApiResponse<int>.ErrorResponse($"Lỗi khi tạo thanh toán: {ex.Message}");
+            }
         }
 
-        public async Task DeleteAsync(int maThanhToan)
+        public async Task<ApiResponse<bool>> UpdateAsync(Payment payment)
         {
-            await _db.ExecuteStoredProcedureAsync("sp_Payment_Delete", new { MaThanhToan = maThanhToan });
+            try
+            {
+                var parameters = new
+                {
+                    payment.MaThanhToan,
+                    payment.MaHoaDon,
+                    payment.PhuongThucThanhToan,
+                    payment.SoDiemSuDung,
+                    payment.SoTienGiam,
+                    payment.ThanhTien,
+                    payment.NgayThanhToan
+                };
+
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Payment_Update", parameters);
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Cập nhật thanh toán thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Cập nhật thanh toán thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi cập nhật thanh toán: {ex.Message}");
+            }
         }
 
-        public async Task<Payment> GetByIdAsync(int maThanhToan)
+        public async Task<ApiResponse<bool>> DeleteAsync(int maThanhToan)
         {
-            return await _db.QueryFirstOrDefaultStoredProcedureAsync<Payment>("sp_Payment_GetById", new { MaThanhToan = maThanhToan });
+            try
+            {
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Payment_Delete", new { MaThanhToan = maThanhToan });
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Xóa thanh toán thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Xóa thanh toán thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xóa thanh toán: {ex.Message}");
+            }
         }
 
-        public async Task<(IEnumerable<Payment> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, string? searchTerm = null)
+        public async Task<ApiResponse<Payment>> GetByIdAsync(int maThanhToan)
         {
-            using var reader = await _db.QueryMultipleAsync("sp_Payment_GetAll",
-                new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+            try
+            {
+                var payment = await _db.QueryFirstOrDefaultStoredProcedureAsync<Payment>("sp_Payment_GetById", new { MaThanhToan = maThanhToan });
+                if (payment == null)
+                    return ApiResponse<Payment>.ErrorResponse("Không tìm thấy thanh toán");
 
-            var items = await reader.ReadAsync<Payment>();
-            var totalCount = await reader.ReadSingleAsync<int>();
+                return ApiResponse<Payment>.SuccessResponse(payment, "Lấy thông tin thanh toán thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<Payment>.ErrorResponse($"Lỗi khi lấy thông tin thanh toán: {ex.Message}");
+            }
+        }
 
-            return (items, totalCount);
+        public async Task<(ApiResponse<IEnumerable<Payment>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null)
+        {
+            try
+            {
+                using var reader = await _db.QueryMultipleAsync("sp_Payment_GetAll",
+                    new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+
+                var items = (await reader.ReadAsync<Payment>()).ToList();
+                var totalCount = await reader.ReadSingleAsync<int>();
+
+                return (ApiResponse<IEnumerable<Payment>>.SuccessResponse(items, "Lấy danh sách thanh toán thành công"), totalCount);
+            }
+            catch (Exception ex)
+            {
+                return (ApiResponse<IEnumerable<Payment>>.ErrorResponse($"Lỗi khi lấy danh sách thanh toán: {ex.Message}"), 0);
+            }
         }
     }
 }

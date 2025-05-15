@@ -2,6 +2,7 @@ using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -24,14 +25,16 @@ namespace HotelManagement.Controllers
         {
             var (result, totalCount) = await _roomTypeRepository.GetAllAsync(pageNumber, pageSize, searchTerm);
             if (!result.Success)
-                return BadRequest(result.Message);
+                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<RoomType>)null });
 
-            return Ok(new
+            return StatusCode(200, new
             {
-                Items = result.Data,
-                TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
             });
         }
 
@@ -40,8 +43,14 @@ namespace HotelManagement.Controllers
         {
             var response = await _roomTypeRepository.GetByIdAsync(maLoaiPhong);
             if (!response.Success)
-                return NotFound(response.Message);
-            return Ok(response);
+                return StatusCode(404, new { success = false, message = response.Message, data = (RoomType)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPost]
@@ -49,20 +58,32 @@ namespace HotelManagement.Controllers
         {
             var response = await _roomTypeRepository.CreateAsync(roomType);
             if (!response.Success)
-                return BadRequest(response.Message);
+                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
 
-            return CreatedAtAction(nameof(GetById), new { maLoaiPhong = response.Data }, response);
+            return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{maLoaiPhong}")]
         public async Task<IActionResult> Update(int maLoaiPhong, [FromBody] RoomType roomType)
         {
-            roomType.MaLoaiPhong = maLoaiPhong;
+            if (maLoaiPhong != roomType.MaLoaiPhong)
+                return StatusCode(400, new { success = false, message = "Mã loại phòng không khớp", data = false });
+
             var response = await _roomTypeRepository.UpdateAsync(roomType);
             if (!response.Success)
-                return BadRequest(response.Message);
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
 
-            return Ok(response);
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{maLoaiPhong}")]
@@ -70,9 +91,14 @@ namespace HotelManagement.Controllers
         {
             var response = await _roomTypeRepository.DeleteAsync(maLoaiPhong);
             if (!response.Success)
-                return BadRequest(response.Message);
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
 
-            return Ok(response);
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
 }

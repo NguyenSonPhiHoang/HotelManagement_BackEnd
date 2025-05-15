@@ -2,10 +2,11 @@ using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/invoices")]
     [ApiController]
     public class InvoiceController : ControllerBase
     {
@@ -19,60 +20,64 @@ namespace HotelManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Invoice invoice)
         {
-            try
+            var response = await _repository.CreateAsync(invoice);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+
+            return StatusCode(201, new
             {
-                var maHoaDon = await _repository.CreateAsync(invoice);
-                return CreatedAtAction(nameof(GetById), new { maHoaDon }, new { MaHoaDon = maHoaDon });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{maHoaDon}")]
         public async Task<IActionResult> Update(int maHoaDon, [FromBody] Invoice invoice)
         {
-            try
+            if (maHoaDon != invoice.MaHoaDon)
+                return StatusCode(400, new { success = false, message = "Mã hóa đơn không khớp", data = false });
+
+            var response = await _repository.UpdateAsync(invoice);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                invoice.MaHoaDon = maHoaDon;
-                await _repository.UpdateAsync(invoice);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{maHoaDon}")]
         public async Task<IActionResult> Delete(int maHoaDon)
         {
-            try
+            var response = await _repository.DeleteAsync(maHoaDon);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                await _repository.DeleteAsync(maHoaDon);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{maHoaDon}")]
         public async Task<IActionResult> GetById(int maHoaDon)
         {
-            try
+            var response = await _repository.GetByIdAsync(maHoaDon);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (Invoice)null });
+
+            return StatusCode(200, new
             {
-                var invoice = await _repository.GetByIdAsync(maHoaDon);
-                if (invoice == null)
-                    return NotFound();
-                return Ok(invoice);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet]
@@ -81,21 +86,19 @@ namespace HotelManagement.Controllers
             [FromQuery, Range(1, 100)] int pageSize = 10,
             [FromQuery] string? searchTerm = null)
         {
-            try
+            var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm);
+            if (!result.Success)
+                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<Invoice>)null });
+
+            return StatusCode(200, new
             {
-                var (items, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm);
-                return Ok(new
-                {
-                    Items = items,
-                    TotalCount = totalCount,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
+            });
         }
     }
 }

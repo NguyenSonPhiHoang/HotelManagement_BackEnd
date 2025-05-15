@@ -2,6 +2,7 @@ using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -17,85 +18,107 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] Booking booking)
+        public async Task<IActionResult> Create([FromBody] Booking booking)
         {
-            try
+            var response = await _repository.CreateAsync(booking);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+
+            return StatusCode(201, new
             {
-                var maDatPhong = _repository.Create(booking);
-                return CreatedAtAction(nameof(GetById), new { maDatPhong }, new { MaDatPhong = maDatPhong });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{maDatPhong}")]
-        public IActionResult Update(int maDatPhong, [FromBody] Booking booking)
+        public async Task<IActionResult> Update(int maDatPhong, [FromBody] Booking booking)
         {
-            try
+            if (maDatPhong != booking.MaDatPhong)
+                return StatusCode(400, new { success = false, message = "Mã đặt phòng không khớp", data = false });
+
+            var response = await _repository.UpdateAsync(booking);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                booking.MaDatPhong = maDatPhong;
-                _repository.Update(booking);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{maDatPhong}")]
-        public IActionResult Delete(int maDatPhong)
+        public async Task<IActionResult> Delete(int maDatPhong)
         {
-            try
+            var response = await _repository.DeleteAsync(maDatPhong);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
             {
-                _repository.Delete(maDatPhong);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{maDatPhong}")]
-        public IActionResult GetById(int maDatPhong)
+        public async Task<IActionResult> GetById(int maDatPhong)
         {
-            try
+            var response = await _repository.GetByIdAsync(maDatPhong);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (Booking)null });
+
+            return StatusCode(200, new
             {
-                var booking = _repository.GetById(maDatPhong);
-                if (booking == null)
-                    return NotFound();
-                return Ok(booking);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet]
-        public IActionResult GetAll(
+        public async Task<IActionResult> GetAll(
             [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1,
             [FromQuery, Range(1, 100)] int pageSize = 10,
-            [FromQuery] string? searchTerm = null)
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = "MaDatPhong",
+            [FromQuery] string? sortOrder = "ASC")
         {
-            try
+            var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
+            if (!result.Success)
+                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<Booking>)null });
+
+            return StatusCode(200, new
             {
-                var (items, totalCount) = _repository.GetAll(pageNumber, pageSize, searchTerm);
-                return Ok(new
-                {
-                    Items = items,
-                    TotalCount = totalCount,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                });
-            }
-            catch (Exception ex)
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
+            });
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchByMaDatPhong([FromQuery] int maDatPhong)
+        {
+            if (maDatPhong <= 0)
+                return StatusCode(400, new { success = false, message = "Mã đặt phòng phải lớn hơn 0", data = (Booking)null });
+
+            var response = await _repository.SearchByMaDatPhongAsync(maDatPhong);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (Booking)null });
+
+            return StatusCode(200, new
             {
-                return BadRequest(ex.Message);
-            }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
 }
