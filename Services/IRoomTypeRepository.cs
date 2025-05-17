@@ -10,7 +10,7 @@ namespace HotelManagement.Services
     public interface IRoomTypeRepository
     {
         Task<(ApiResponse<IEnumerable<RoomType>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null);
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaLoaiPhong", string? sortOrder = "ASC");
         Task<ApiResponse<RoomType>> GetByIdAsync(int maLoaiPhong);
         Task<ApiResponse<int>> CreateAsync(RoomType roomType);
         Task<ApiResponse<bool>> UpdateAsync(RoomType roomType);
@@ -27,12 +27,19 @@ namespace HotelManagement.Services
         }
 
         public async Task<(ApiResponse<IEnumerable<RoomType>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null)
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaLoaiPhong", string? sortOrder = "ASC")
         {
             try
             {
                 using var reader = await _db.QueryMultipleAsync("sp_RoomType_GetAll",
-                    new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+                    new
+                    {
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        SearchTerm = searchTerm,
+                        SortBy = sortBy,
+                        SortOrder = sortOrder
+                    });
 
                 var items = (await reader.ReadAsync<RoomType>()).ToList();
                 var totalCount = await reader.ReadSingleAsync<int>();

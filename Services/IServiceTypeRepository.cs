@@ -9,7 +9,8 @@ namespace HotelManagement.Services
 {
     public interface IServiceTypeRepository
     {
-        Task<ApiResponse<IEnumerable<ServiceType>>> GetAllAsync();
+        Task<(ApiResponse<IEnumerable<ServiceType>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaLoaiDV", string? sortOrder = "ASC");
         Task<ApiResponse<ServiceType>> GetByIdAsync(int maLoaiDichVu);
         Task<ApiResponse<ServiceType>> CreateAsync(AddServiceType serviceType);
         Task<ApiResponse<ServiceType>> UpdateAsync(int maLoaiDichVu, UpdateServiceType serviceType);
@@ -25,16 +26,29 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<ApiResponse<IEnumerable<ServiceType>>> GetAllAsync()
+        public async Task<(ApiResponse<IEnumerable<ServiceType>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaLoaiDV", string? sortOrder = "ASC")
         {
             try
             {
-                var serviceTypes = await _db.QueryStoredProcedureAsync<ServiceType>("sp_GetAllServiceTypes");
-                return ApiResponse<IEnumerable<ServiceType>>.SuccessResponse(serviceTypes, "Lấy danh sách loại dịch vụ thành công");
+                using var reader = await _db.QueryMultipleAsync("sp_GetAllServiceTypes",
+                    new
+                    {
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        SearchTerm = searchTerm,
+                        SortBy = sortBy,
+                        SortOrder = sortOrder
+                    });
+
+                var items = (await reader.ReadAsync<ServiceType>()).ToList();
+                var totalCount = await reader.ReadSingleAsync<int>();
+
+                return (ApiResponse<IEnumerable<ServiceType>>.SuccessResponse(items, "Lấy danh sách loại dịch vụ thành công"), totalCount);
             }
             catch (Exception ex)
             {
-                return ApiResponse<IEnumerable<ServiceType>>.ErrorResponse($"Lỗi khi lấy danh sách loại dịch vụ: {ex.Message}");
+                return (ApiResponse<IEnumerable<ServiceType>>.ErrorResponse($"Lỗi khi lấy danh sách loại dịch vụ: {ex.Message}"), 0);
             }
         }
 
