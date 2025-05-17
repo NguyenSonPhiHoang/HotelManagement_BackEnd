@@ -14,7 +14,7 @@ namespace HotelManagement.Services
         Task<ApiResponse<bool>> DeleteAsync(int maCT);
         Task<ApiResponse<PointProgram>> GetByIdAsync(int maCT);
         Task<(ApiResponse<IEnumerable<PointProgram>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null);
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaCT", string? sortOrder = "ASC");
     }
 
     public class PointProgramRepository : IPointProgramRepository
@@ -103,12 +103,19 @@ namespace HotelManagement.Services
         }
 
         public async Task<(ApiResponse<IEnumerable<PointProgram>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null)
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaCT", string? sortOrder = "ASC")
         {
             try
             {
                 using var reader = await _db.QueryMultipleAsync("sp_PointProgram_GetAll",
-                    new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+                    new
+                    {
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        SearchTerm = searchTerm,
+                        SortBy = sortBy,
+                        SortOrder = sortOrder
+                    });
 
                 var items = (await reader.ReadAsync<PointProgram>()).ToList();
                 var totalCount = await reader.ReadSingleAsync<int>();

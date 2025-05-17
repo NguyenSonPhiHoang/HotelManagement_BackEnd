@@ -1,6 +1,7 @@
 ﻿using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
@@ -17,17 +18,25 @@ namespace HotelManagement.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllCustomers()
+        public async Task<IActionResult> GetAllCustomers(
+            [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1,
+            [FromQuery, Range(1, 100)] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = "MaKhachHang",
+            [FromQuery] string? sortOrder = "ASC")
         {
-            var response = await _customerRepository.GetAllAsync();
-            if (!response.Success)
-                return StatusCode(500, new { success = false, message = response.Message, data = (IEnumerable<Customer>)null });
+            var (result, totalCount) = await _customerRepository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
+            if (!result.Success)
+                return StatusCode(500, new { success = false, message = result.Message, data = (IEnumerable<Customer>)null });
 
             return StatusCode(200, new
             {
-                success = response.Success,
-                message = response.Message,
-                data = response.Data
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
             });
         }
 

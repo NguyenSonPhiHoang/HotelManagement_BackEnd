@@ -9,7 +9,8 @@ namespace HotelManagement.Services
 {
     public interface IServiceRepository
     {
-        Task<ApiResponse<IEnumerable<Service>>> GetAllAsync();
+        Task<(ApiResponse<IEnumerable<Service>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaDichVu", string? sortOrder = "ASC");
         Task<ApiResponse<Service>> GetByIdAsync(int maDichVu);
         Task<ApiResponse<Service>> CreateAsync(AddService service);
         Task<ApiResponse<Service>> UpdateAsync(int maDichVu, UpdateService service);
@@ -25,16 +26,29 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<ApiResponse<IEnumerable<Service>>> GetAllAsync()
+        public async Task<(ApiResponse<IEnumerable<Service>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaDichVu", string? sortOrder = "ASC")
         {
             try
             {
-                var services = await _db.QueryStoredProcedureAsync<Service>("sp_GetAllServices");
-                return ApiResponse<IEnumerable<Service>>.SuccessResponse(services, "Lấy danh sách dịch vụ thành công");
+                using var reader = await _db.QueryMultipleAsync("sp_GetAllServices",
+                    new
+                    {
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        SearchTerm = searchTerm,
+                        SortBy = sortBy,
+                        SortOrder = sortOrder
+                    });
+
+                var items = (await reader.ReadAsync<Service>()).ToList();
+                var totalCount = await reader.ReadSingleAsync<int>();
+
+                return (ApiResponse<IEnumerable<Service>>.SuccessResponse(items, "Lấy danh sách dịch vụ thành công"), totalCount);
             }
             catch (Exception ex)
             {
-                return ApiResponse<IEnumerable<Service>>.ErrorResponse($"Lỗi khi lấy danh sách dịch vụ: {ex.Message}");
+                return (ApiResponse<IEnumerable<Service>>.ErrorResponse($"Lỗi khi lấy danh sách dịch vụ: {ex.Message}"), 0);
             }
         }
 

@@ -3,13 +3,15 @@ using HotelManagement.Model;
 using HotelManagement.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace HotelManagement.Services
 {
     public interface ICustomerRepository
     {
-        Task<ApiResponse<IEnumerable<Customer>>> GetAllAsync();
+        Task<(ApiResponse<IEnumerable<Customer>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaKhachHang", string? sortOrder = "ASC");
         Task<ApiResponse<Customer>> GetByIdAsync(string id);
         Task<ApiResponse<string>> CreateAsync(AddCustomer customer);
         Task<ApiResponse<bool>> UpdateAsync(Customer customer);
@@ -28,16 +30,29 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<ApiResponse<IEnumerable<Customer>>> GetAllAsync()
+        public async Task<(ApiResponse<IEnumerable<Customer>> Items, int TotalCount)> GetAllAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaKhachHang", string? sortOrder = "ASC")
         {
             try
             {
-                var customers = await _db.QueryStoredProcedureAsync<Customer>("sp_Customer_GetAll");
-                return ApiResponse<IEnumerable<Customer>>.SuccessResponse(customers, "Lấy danh sách khách hàng thành công");
+                using var reader = await _db.QueryMultipleAsync("sp_Customer_GetAll",
+                    new
+                    {
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        SearchTerm = searchTerm,
+                        SortBy = sortBy,
+                        SortOrder = sortOrder
+                    });
+
+                var items = (await reader.ReadAsync<Customer>()).ToList();
+                var totalCount = await reader.ReadSingleAsync<int>();
+
+                return (ApiResponse<IEnumerable<Customer>>.SuccessResponse(items, "Lấy danh sách khách hàng thành công"), totalCount);
             }
             catch (Exception ex)
             {
-                return ApiResponse<IEnumerable<Customer>>.ErrorResponse($"Lỗi khi lấy danh sách khách hàng: {ex.Message}");
+                return (ApiResponse<IEnumerable<Customer>>.ErrorResponse($"Lỗi khi lấy danh sách khách hàng: {ex.Message}"), 0);
             }
         }
 

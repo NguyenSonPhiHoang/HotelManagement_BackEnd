@@ -84,9 +84,11 @@ namespace HotelManagement.Controllers
         public async Task<IActionResult> GetAll(
             [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1,
             [FromQuery, Range(1, 100)] int pageSize = 10,
-            [FromQuery] string? searchTerm = null)
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = "MaBSD",
+            [FromQuery] string? sortOrder = "ASC")
         {
-            var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm);
+            var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
             if (!result.Success)
                 return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<BookingService>)null });
 

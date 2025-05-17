@@ -14,7 +14,7 @@ namespace HotelManagement.Services
         Task<ApiResponse<bool>> DeleteAsync(int maBSD);
         Task<ApiResponse<BookingService>> GetByIdAsync(int maBSD);
         Task<(ApiResponse<IEnumerable<BookingService>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null);
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaBSD", string? sortOrder = "ASC");
     }
 
     public class BookingServiceRepository : IBookingServiceRepository
@@ -109,12 +109,19 @@ namespace HotelManagement.Services
         }
 
         public async Task<(ApiResponse<IEnumerable<BookingService>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null)
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaBSD", string? sortOrder = "ASC")
         {
             try
             {
                 using var reader = await _db.QueryMultipleAsync("sp_BookingService_GetAll",
-                    new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+                    new
+                    {
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        SearchTerm = searchTerm,
+                        SortBy = sortBy,
+                        SortOrder = sortOrder
+                    });
 
                 var items = (await reader.ReadAsync<BookingService>()).ToList();
                 var totalCount = await reader.ReadSingleAsync<int>();

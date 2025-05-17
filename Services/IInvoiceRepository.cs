@@ -14,7 +14,7 @@ namespace HotelManagement.Services
         Task<ApiResponse<bool>> DeleteAsync(int maHoaDon);
         Task<ApiResponse<Invoice>> GetByIdAsync(int maHoaDon);
         Task<(ApiResponse<IEnumerable<Invoice>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null);
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaHoaDon", string? sortOrder = "ASC");
     }
 
     public class InvoiceRepository : IInvoiceRepository
@@ -109,12 +109,19 @@ namespace HotelManagement.Services
         }
 
         public async Task<(ApiResponse<IEnumerable<Invoice>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null)
+            int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaHoaDon", string? sortOrder = "ASC")
         {
             try
             {
                 using var reader = await _db.QueryMultipleAsync("sp_Invoice_GetAll",
-                    new { PageNumber = pageNumber, PageSize = pageSize, SearchTerm = searchTerm });
+                    new
+                    {
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        SearchTerm = searchTerm,
+                        SortBy = sortBy,
+                        SortOrder = sortOrder
+                    });
 
                 var items = (await reader.ReadAsync<Invoice>()).ToList();
                 var totalCount = await reader.ReadSingleAsync<int>();
