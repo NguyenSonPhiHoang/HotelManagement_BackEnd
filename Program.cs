@@ -26,6 +26,7 @@ builder.Services.AddScoped<IBookingServiceRepository, BookingServiceRepository>(
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IPointHistoryRepository, PointHistoryRepository>();
 builder.Services.AddScoped<IPointProgramRepository, PointProgramRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 // Cấu hình JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

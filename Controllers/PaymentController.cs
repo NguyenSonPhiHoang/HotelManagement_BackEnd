@@ -11,10 +11,17 @@ namespace HotelManagement.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentRepository _repository;
+        private readonly ICustomerRepository _customerRepository;
+        private readonly IInvoiceRepository _invoiceRepository; // Thêm IInvoiceRepository
 
-        public PaymentController(IPaymentRepository repository)
+        public PaymentController(
+            IPaymentRepository repository, 
+            ICustomerRepository customerRepository, 
+            IInvoiceRepository invoiceRepository) // Thêm vào constructor
         {
             _repository = repository;
+            _customerRepository = customerRepository;
+            _invoiceRepository = invoiceRepository; // Gán biến
         }
 
         [HttpPost]
@@ -23,6 +30,15 @@ namespace HotelManagement.Controllers
             var response = await _repository.CreateAsync(payment);
             if (!response.Success)
                 return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+
+            // Lấy thông tin hóa đơn
+            var invoiceResponse = await _invoiceRepository.GetByIdAsync(payment.MaHoaDon);
+            if (invoiceResponse.Success && invoiceResponse.Data != null)
+            {
+                // Chuyển MaKhachHang từ int sang string
+                string maKhachHang = invoiceResponse.Data.MaKhachHang.ToString();
+                await _customerRepository.AccumulatePointsAsync(maKhachHang, payment.ThanhTien);
+            }
 
             return StatusCode(201, new
             {
