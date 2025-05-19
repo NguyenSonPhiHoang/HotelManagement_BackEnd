@@ -1,8 +1,12 @@
+using Microsoft.AspNetCore.Mvc;
 using HotelManagement.Model;
 using HotelManagement.Services;
-using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using HotelManagement.DataReader;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HotelManagement.Controllers
 {
@@ -18,11 +22,24 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Booking booking)
+        public async Task<IActionResult> Create([FromBody] BookingCreateRequest request)
         {
+            if (request == null || request.MaKhachHang <= 0 || request.MaPhong <= 0)
+                return BadRequest(new { success = false, message = "Dữ liệu đặt phòng không hợp lệ", data = (int?)null });
+
+            var booking = new Booking
+            {
+                MaKhachHang = request.MaKhachHang,
+                MaPhong = request.MaPhong,
+                GioCheckIn = request.GioCheckIn,
+                GioCheckOut = request.GioCheckOut,
+                NgayDat = request.NgayDat,
+                TrangThai = "Pending" // Mặc định
+            };
+
             var response = await _repository.CreateAsync(booking);
             if (!response.Success)
-                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+                return BadRequest(new { success = false, message = response.Message, data = (int?)null });
 
             return StatusCode(201, new
             {
@@ -114,6 +131,24 @@ namespace HotelManagement.Controllers
                 return StatusCode(404, new { success = false, message = response.Message, data = (Booking)null });
 
             return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+
+        [HttpPut("{maDatPhong}/status")]
+        public async Task<IActionResult> UpdateStatus(int maDatPhong, [FromBody] UpdateStatusRequest request)
+        {
+            if (string.IsNullOrEmpty(request.TrangThai))
+                return BadRequest(new { success = false, message = "Trạng thái không hợp lệ", data = false });
+
+            var response = await _repository.UpdateStatusAsync(maDatPhong, request.TrangThai);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = false });
+
+            return Ok(new
             {
                 success = response.Success,
                 message = response.Message,

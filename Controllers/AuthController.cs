@@ -50,5 +50,14 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+        {
+            var response = await _authRepository.RefreshTokenAsync(request);
+            if (!response.Success)
+                return BadRequest(new { response.Success, response.Message, response.Data });
+
+            return Ok(new { response.Success, response.Message, response.Data });
+        }
     }
 }
