@@ -9,14 +9,14 @@ namespace HotelManagement.Services
 {
     public interface IInvoiceRepository
     {
-        Task<ApiResponse<int>> CreateAsync(Invoice invoice);
+        Task<ApiResponse<int>> CreateAsync(InvoiceCreateRequest request);
         Task<ApiResponse<bool>> UpdateAsync(Invoice invoice);
         Task<ApiResponse<bool>> DeleteAsync(int maHoaDon);
         Task<ApiResponse<Invoice>> GetByIdAsync(int maHoaDon);
         Task<(ApiResponse<IEnumerable<Invoice>> Items, int TotalCount)> GetAllAsync(
             int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaHoaDon", string? sortOrder = "ASC");
+        Task<ApiResponse<bool>> AddServiceAsync(InvoiceServiceCreateRequest request); // Thêm phương thức
     }
-
     public class InvoiceRepository : IInvoiceRepository
     {
         private readonly DatabaseDapper _db;
@@ -26,21 +26,24 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<ApiResponse<int>> CreateAsync(Invoice invoice)
+        public async Task<ApiResponse<int>> CreateAsync(InvoiceCreateRequest request)
         {
             try
             {
                 var parameters = new
                 {
-                    invoice.MaDatPhong,
-                    invoice.MaKhachHang,
-                    invoice.TongTienPhong,
-                    invoice.TongTienDichVu,
-                    invoice.TongThanhTien,
-                    invoice.TrangThai
+                    request.MaDatPhong,
+                    request.MaKhachHang,
+                    request.TongTienPhong,
+                    request.TongTienDichVu,
+                    request.TongThanhTien,
+                    request.TrangThai
                 };
 
                 var maHoaDon = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Invoice_Create", parameters);
+                if (maHoaDon == 0)
+                    return ApiResponse<int>.ErrorResponse("Tạo hóa đơn thất bại");
+
                 return ApiResponse<int>.SuccessResponse(maHoaDon, "Tạo hóa đơn thành công");
             }
             catch (Exception ex)
@@ -131,6 +134,48 @@ namespace HotelManagement.Services
             catch (Exception ex)
             {
                 return (ApiResponse<IEnumerable<Invoice>>.ErrorResponse($"Lỗi khi lấy danh sách hóa đơn: {ex.Message}"), 0);
+            }
+        }
+        public async Task<ApiResponse<bool>> AddServiceAsync(InvoiceServiceCreateRequest request)
+        {
+            try
+            {
+                // Kiểm tra hóa đơn
+                var invoice = await _db.QueryFirstOrDefaultStoredProcedureAsync<Invoice>(
+                    "sp_Invoice_GetById", new { MaHoaDon = request.MaHoaDon });
+                if (invoice == null)
+                    return ApiResponse<bool>.ErrorResponse("Hóa đơn không tồn tại");
+
+                // Kiểm tra dịch vụ
+                var service = await _db.QueryFirstOrDefaultStoredProcedureAsync<Service>(
+                    "sp_Service_GetById", new { MaDichVu = request.MaDichVu });
+                if (service == null)
+                    return ApiResponse<bool>.ErrorResponse("Dịch vụ không tồn tại");
+
+                // Thêm hoặc cập nhật dịch vụ
+                var parameters = new
+                {
+                    request.MaHoaDon,
+                    request.MaDichVu,
+                    request.SoLuong
+                };
+
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_InvoiceService_Create", parameters);
+                if (rowsAffected <= 0)
+                {
+                    // Log để debug
+                    Console.WriteLine($"rowsAffected = {rowsAffected} for MaHoaDon = {request.MaHoaDon}, MaDichVu = {request.MaDichVu}");
+                    return ApiResponse<bool>.ErrorResponse("Thêm hoặc cập nhật dịch vụ thất bại");
+                }
+
+                // Cập nhật tổng tiền
+                await _db.ExecuteStoredProcedureAsync("sp_Invoice_UpdateServiceTotal", new { request.MaHoaDon });
+
+                return ApiResponse<bool>.SuccessResponse(true, "Thêm hoặc cập nhật dịch vụ thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi thêm dịch vụ: {ex.Message}");
             }
         }
     }

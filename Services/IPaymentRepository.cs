@@ -9,7 +9,7 @@ namespace HotelManagement.Services
 {
     public interface IPaymentRepository
     {
-        Task<ApiResponse<int>> CreateAsync(Payment payment);
+        Task<ApiResponse<int>> CreateAsync(PaymentCreateRequest request);
         Task<ApiResponse<bool>> UpdateAsync(Payment payment);
         Task<ApiResponse<bool>> DeleteAsync(int maThanhToan);
         Task<ApiResponse<Payment>> GetByIdAsync(int maThanhToan);
@@ -26,18 +26,18 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<ApiResponse<int>> CreateAsync(Payment payment)
+        public async Task<ApiResponse<int>> CreateAsync(PaymentCreateRequest request)
         {
             try
             {
                 var parameters = new
                 {
-                    payment.MaHoaDon,
-                    payment.PhuongThucThanhToan,
-                    payment.SoDiemSuDung,
-                    payment.SoTienGiam,
-                    payment.ThanhTien,
-                    payment.NgayThanhToan
+                    request.MaHoaDon,
+                    request.PhuongThucThanhToan,
+                    request.SoDiemSuDung,
+                    request.SoTienGiam,
+                    request.ThanhTien,
+                    request.NgayThanhToan
                 };
 
                 var maThanhToan = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Payment_Create", parameters);

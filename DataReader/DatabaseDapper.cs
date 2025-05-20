@@ -18,7 +18,7 @@ namespace HotelManagement.DataReader
         {
             try
             {
-                connectionString = configuration.GetConnectionString("DefaultConnection") 
+                connectionString = configuration.GetConnectionString("DefaultConnection")
                     ?? throw new InvalidOperationException("Chuỗi kết nối không được cấu hình.");
             }
             catch (Exception)
@@ -100,13 +100,18 @@ namespace HotelManagement.DataReader
         }
 
         // Thực thi câu lệnh SQL không truy vấn với stored procedure (async)
-        public async Task<int> ExecuteStoredProcedureAsync(string storedProcedure, object parameters = null)
+        public async Task<int> ExecuteStoredProcedureAsync(string storedProcedureName, object parameters = null)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
-            return await connection.ExecuteAsync(storedProcedure, parameters, commandType: CommandType.StoredProcedure, commandTimeout: DefaultCommandTimeout);
+            var result = await connection.QuerySingleAsync<int>(
+                storedProcedureName,
+                parameters,
+                commandType: CommandType.StoredProcedure,
+                commandTimeout: DefaultCommandTimeout
+            );
+            return result;
         }
-
         // Thực thi câu lệnh SQL không truy vấn (sync)
         public int Execute(string sql, object parameters = null)
         {

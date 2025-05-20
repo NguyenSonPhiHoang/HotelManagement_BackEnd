@@ -37,7 +37,30 @@ namespace HotelManagement.Services
                     return ApiResponse<int>.ErrorResponse("Dữ liệu đặt phòng không hợp lệ");
                 }
 
-                booking.TrangThai = "Pending"; // Đảm bảo trạng thái mặc định
+                // Kiểm tra LoaiTinhTien không phân biệt hoa thường và loại bỏ khoảng trắng
+                if (string.IsNullOrWhiteSpace(booking.LoaiTinhTien) ||
+                    !new[] { "Hourly", "Nightly" }.Contains(booking.LoaiTinhTien.Trim(), StringComparer.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"Loại tính tiền không hợp lệ: {booking.LoaiTinhTien}");
+                    return ApiResponse<int>.ErrorResponse("Loại tính tiền không hợp lệ");
+                }
+
+                // Lấy giá phòng
+                var room = await _db.QueryFirstOrDefaultAsync<dynamic>(
+                    "SELECT GiaPhong FROM Room WHERE MaPhong = @MaPhong",
+                    new { MaPhong = booking.MaPhong });
+
+                if (room == null)
+                {
+                    Console.WriteLine($"Phòng không tồn tại: MaPhong = {booking.MaPhong}");
+                    return ApiResponse<int>.ErrorResponse("Phòng không tồn tại");
+                }
+
+                // Tính tổng tiền
+                decimal tongTien = CalculateTotalPrice(booking, room.GiaPhong, booking.LoaiTinhTien);
+                booking.TongTien = tongTien;
+                booking.TrangThai = "Pending";
+
                 var parameters = new
                 {
                     booking.MaKhachHang,
@@ -45,10 +68,12 @@ namespace HotelManagement.Services
                     booking.GioCheckIn,
                     booking.GioCheckOut,
                     booking.TrangThai,
-                    booking.NgayDat
+                    booking.NgayDat,
+                    booking.TongTien,
+                    booking.LoaiTinhTien
                 };
 
-                Console.WriteLine($"Gọi sp_Booking_Create với MaKhachHang: {booking.MaKhachHang}, MaPhong: {booking.MaPhong}");
+                Console.WriteLine($"Gọi sp_Booking_Create với MaKhachHang: {booking.MaKhachHang}, MaPhong: {booking.MaPhong}, TongTien: {tongTien}");
                 var maDatPhong = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Booking_Create", parameters);
                 if (maDatPhong <= 0)
                 {
@@ -63,6 +88,30 @@ namespace HotelManagement.Services
             {
                 Console.WriteLine($"Lỗi khi tạo đặt phòng: {ex.Message}");
                 return ApiResponse<int>.ErrorResponse($"Lỗi khi tạo đặt phòng: {ex.Message}");
+            }
+        }
+
+        private decimal CalculateTotalPrice(Booking booking, decimal giaPhong, string loaiTinhTien)
+        {
+            double hours = (booking.GioCheckOut - booking.GioCheckIn).TotalHours;
+            if (hours <= 0)
+                return 0;
+
+            if (loaiTinhTien == "Nightly" || hours > 12)
+            {
+                // Tính theo đêm
+                int nights = (int)Math.Ceiling(hours / 24);
+                return giaPhong * nights;
+            }
+            else
+            {
+                // Tính theo giờ
+                decimal firstHourPrice = giaPhong * 0.2m; // 20% giá phòng
+                decimal subsequentHourPrice = giaPhong * 0.1m; // 10% giá phòng/giờ
+                int totalHours = (int)Math.Ceiling(hours);
+                if (totalHours == 1)
+                    return firstHourPrice;
+                return firstHourPrice + (totalHours - 1) * subsequentHourPrice;
             }
         }
 

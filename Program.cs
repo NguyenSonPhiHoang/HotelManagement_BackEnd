@@ -7,6 +7,12 @@ using HotelManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Thêm logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -90,9 +96,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowReactApp"); // Đảm bảo API sử dụng đúng policy CORS
+app.UseCors("AllowReactApp");
 
-app.UseAuthentication(); // Thêm dòng này
+app.UseAuthentication();    
 app.UseAuthorization();
 
 app.MapControllers();

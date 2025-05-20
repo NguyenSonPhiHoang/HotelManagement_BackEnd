@@ -1,10 +1,6 @@
 ﻿using HotelManagement.DataReader;
 using HotelManagement.Model;
-using HotelManagement.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Globalization;
 
 namespace HotelManagement.Services
 {
@@ -20,6 +16,8 @@ namespace HotelManagement.Services
         Task<ApiResponse<bool>> IsPhoneExistsAsync(string phone);
         Task<ApiResponse<bool>> AddPointsAsync(string customerId, int points);
         Task<ApiResponse<bool>> AccumulatePointsAsync(string maKhachHang, decimal thanhTien);
+        Task<ApiResponse<decimal>> UsePointsAsync(string maKhachHang, int soDiemSuDung);
+        Task<ApiResponse<PointProgram>> GetPointProgramByIdAsync(string maCT); // Đã thêm
     }
 
     public class CustomerRepository : ICustomerRepository
@@ -184,18 +182,17 @@ namespace HotelManagement.Services
                 return ApiResponse<bool>.ErrorResponse($"Lỗi khi thêm điểm: {ex.Message}");
             }
         }
+
         public async Task<ApiResponse<bool>> AccumulatePointsAsync(string maKhachHang, decimal thanhTien)
         {
             try
             {
-                // Chuyển đổi maKhachHang sang int
                 if (!int.TryParse(maKhachHang, out int maKhachHangInt))
                 {
-                    Console.WriteLine($"MaKhachHang không hợp lệ: {maKhachHang}");
+                    Console.WriteLine($"Mã khách hàng không hợp lệ: {maKhachHang}");
                     return ApiResponse<bool>.ErrorResponse("Mã khách hàng không hợp lệ");
                 }
 
-                // Lấy thông tin khách hàng
                 var customer = await _db.QueryFirstOrDefaultStoredProcedureAsync<Customer>("sp_Customer_GetById", new { MaKhachHang = maKhachHangInt });
                 if (customer == null)
                 {
@@ -204,45 +201,66 @@ namespace HotelManagement.Services
                 }
                 Console.WriteLine($"Tìm thấy khách hàng: MaKhachHang = {maKhachHangInt}, MaCT = {customer.MaCT}");
 
-                // Lấy chương trình điểm
                 var pointProgram = await _db.QueryFirstOrDefaultStoredProcedureAsync<PointProgram>("sp_PointProgram_GetById", new { MaCT = customer.MaCT });
                 if (pointProgram == null)
                 {
                     Console.WriteLine($"Không tìm thấy chương trình điểm với MaCT: {customer.MaCT}");
                     return ApiResponse<bool>.ErrorResponse("Không tìm thấy chương trình điểm");
                 }
-                Console.WriteLine($"Tìm thấy chương trình điểm: MaCT = {customer.MaCT}, TyLeTichDiem = {pointProgram.TyLeTichDiem}");
+                Console.WriteLine($"Tìm thấy chương trình điểm: MaCT = {customer.MaCT}, TyLeTichDiem = {pointProgram.TyLeTichDiem.ToString(CultureInfo.InvariantCulture)}");
 
-                // Kiểm tra TyLeTichDiem
                 decimal tyLeTichDiem = pointProgram.TyLeTichDiem;
                 if (tyLeTichDiem <= 0)
                 {
-                    Console.WriteLine($"TyLeTichDiem không hợp lệ: {tyLeTichDiem}");
+                    Console.WriteLine($"TyLeTichDiem không hợp lệ: {tyLeTichDiem.ToString(CultureInfo.InvariantCulture)}");
                     return ApiResponse<bool>.ErrorResponse("Tỷ lệ tích điểm không hợp lệ");
                 }
 
-                // Tính điểm
-                int soDiem = (int)(thanhTien * tyLeTichDiem);
-                Console.WriteLine($"Tính điểm: ThanhTien = {thanhTien}, TyLeTichDiem = {tyLeTichDiem}, SoDiem = {soDiem}");
+                // Log giá trị gốc
+                Console.WriteLine($"Giá trị TyLeTichDiem gốc: {pointProgram.TyLeTichDiem.ToString(CultureInfo.InvariantCulture)}");
 
-                // Kiểm tra soDiem
+                // Ép TyLeTichDiem về 0.01 nếu sai
+                // Đảm bảo tỷ lệ tích điểm chính xác
+                if (Math.Abs(tyLeTichDiem - 0.01m) > 0.00001m)
+                {
+                    Console.WriteLine($"Tỷ lệ tích điểm không chính xác: {tyLeTichDiem}, hiệu chỉnh thành 0.01");
+                    tyLeTichDiem = 0.01m;
+                }
+
+                // Tính toán với TyLeTichDiem đã sửa
+                decimal diemTinhToan = thanhTien * tyLeTichDiem;
+                Console.WriteLine($"Giá trị trung gian: ThanhTien = {thanhTien.ToString(CultureInfo.InvariantCulture)}, TyLeTichDiem = {tyLeTichDiem.ToString(CultureInfo.InvariantCulture)}, DiemTinhToan = {diemTinhToan.ToString(CultureInfo.InvariantCulture)}");
+
+                // Kiểm tra và sửa nếu sai
+                decimal expectedDiem = thanhTien * 0.01m;
+                if (Math.Abs(diemTinhToan - expectedDiem) > 0.001m)
+                {
+                    Console.WriteLine($"Lỗi tính toán điểm: DiemTinhToan = {diemTinhToan.ToString(CultureInfo.InvariantCulture)}, Kỳ vọng = {expectedDiem.ToString(CultureInfo.InvariantCulture)}");
+                    diemTinhToan = expectedDiem;
+                }
+                else
+                {
+                    Console.WriteLine($"Tính toán điểm đúng: DiemTinhToan = {diemTinhToan.ToString(CultureInfo.InvariantCulture)}");
+                }
+
+                int soDiem = (int)diemTinhToan;
+                Console.WriteLine($"Tính điểm: ThanhTien = {thanhTien.ToString(CultureInfo.InvariantCulture)}, TyLeTichDiem = {tyLeTichDiem.ToString(CultureInfo.InvariantCulture)}, SoDiem = {soDiem}");
+
                 if (soDiem <= 0)
                 {
-                    Console.WriteLine($"SoDiem không hợp lệ: {soDiem}");
+                    Console.WriteLine($"Số điểm không hợp lệ: {soDiem}");
                     return ApiResponse<bool>.ErrorResponse("Số điểm tính được không hợp lệ");
                 }
 
-                // Cập nhật tổng điểm
-                int rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Customer_AddPoints",
+                int rowsAffected = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Customer_AddPoints",
                     new { MaKhachHang = maKhachHangInt, SoDiemThem = soDiem });
                 if (rowsAffected <= 0)
                 {
-                    Console.WriteLine($"Cập nhật TongDiem thất bại cho MaKhachHang: {maKhachHangInt}, RowsAffected = {rowsAffected}");
+                    Console.WriteLine($"Cập nhật TongDiem thất bại: MaKhachHang = {maKhachHangInt}, RowsAffected = {rowsAffected}");
                     return ApiResponse<bool>.ErrorResponse("Tích điểm thất bại");
                 }
                 Console.WriteLine($"Cập nhật TongDiem thành công: MaKhachHang = {maKhachHangInt}, RowsAffected = {rowsAffected}");
 
-                // Ghi lịch sử tích điểm
                 await _db.ExecuteStoredProcedureAsync("sp_PointHistory_Create",
                     new
                     {
@@ -259,6 +277,105 @@ namespace HotelManagement.Services
             {
                 Console.WriteLine($"Lỗi khi tích điểm cho MaKhachHang {maKhachHang}: {ex.Message}");
                 return ApiResponse<bool>.ErrorResponse($"Lỗi khi tích điểm: {ex.Message}");
+            }
+        }
+        public async Task<ApiResponse<decimal>> UsePointsAsync(string maKhachHang, int soDiemSuDung)
+        {
+            try
+            {
+                if (!int.TryParse(maKhachHang, out int maKhachHangInt))
+                {
+                    Console.WriteLine($"Mã khách hàng không hợp lệ: {maKhachHang}");
+                    return ApiResponse<decimal>.ErrorResponse("Mã khách hàng không hợp lệ");
+                }
+
+                if (soDiemSuDung <= 0)
+                {
+                    Console.WriteLine($"Số điểm sử dụng không hợp lệ: {soDiemSuDung}");
+                    return ApiResponse<decimal>.ErrorResponse("Số điểm sử dụng không hợp lệ");
+                }
+
+                var customer = await _db.QueryFirstOrDefaultStoredProcedureAsync<Customer>("sp_Customer_GetById", new { MaKhachHang = maKhachHangInt });
+                if (customer == null)
+                {
+                    Console.WriteLine($"Không tìm thấy khách hàng với MaKhachHang: {maKhachHangInt}");
+                    return ApiResponse<decimal>.ErrorResponse("Không tìm thấy khách hàng");
+                }
+                Console.WriteLine($"Tìm thấy khách hàng: MaKhachHang = {maKhachHangInt}, TongDiem = {customer.TongDiem}");
+
+                // Kiểm tra điểm đủ dùng
+                if (customer.TongDiem < soDiemSuDung)
+                {
+                    Console.WriteLine($"Không đủ điểm: TongDiem = {customer.TongDiem}, SoDiemSuDung = {soDiemSuDung}");
+                    return ApiResponse<decimal>.ErrorResponse("Không đủ điểm để sử dụng");
+                }
+
+                var pointProgram = await _db.QueryFirstOrDefaultStoredProcedureAsync<PointProgram>("sp_PointProgram_GetById", new { MaCT = customer.MaCT });
+                if (pointProgram == null)
+                {
+                    Console.WriteLine($"Không tìm thấy chương trình điểm với MaCT: {customer.MaCT}");
+                    return ApiResponse<decimal>.ErrorResponse("Không tìm thấy chương trình điểm");
+                }
+                Console.WriteLine($"Tìm thấy chương trình điểm: MaCT = {customer.MaCT}, MucGiamGia = {pointProgram.MucGiamGia.ToString(CultureInfo.InvariantCulture)}");
+
+                // Tính số tiền giảm
+                decimal soTienGiam = soDiemSuDung * pointProgram.MucGiamGia;
+                Console.WriteLine($"Tính tiền giảm: SoDiemSuDung = {soDiemSuDung}, MucGiamGia = {pointProgram.MucGiamGia}, SoTienGiam = {soTienGiam}");
+
+                // Trừ điểm
+                int rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Customer_AddPoints",
+                    new { MaKhachHang = maKhachHangInt, SoDiemThem = -soDiemSuDung }); // Trừ điểm
+                if (rowsAffected <= 0)
+                {
+                    Console.WriteLine($"Cập nhật TongDiem thất bại: MaKhachHang = {maKhachHangInt}, RowsAffected = {rowsAffected}");
+                    return ApiResponse<decimal>.ErrorResponse("Cập nhật điểm thất bại");
+                }
+                Console.WriteLine($"Cập nhật TongDiem thành công: MaKhachHang = {maKhachHangInt}, RowsAffected = {rowsAffected}");
+
+                // Ghi lịch sử giao dịch
+                await _db.ExecuteStoredProcedureAsync("sp_PointHistory_Create",
+                    new
+                    {
+                        MaKhachHang = maKhachHangInt,
+                        SoDiem = soDiemSuDung,
+                        NgayGiaoDich = DateTime.Now,
+                        LoaiGiaoDich = "Use"
+                    });
+                Console.WriteLine($"Ghi PointHistory thành công: MaKhachHang = {maKhachHangInt}, SoDiem = {soDiemSuDung}, LoaiGiaoDich = Use");
+
+                return ApiResponse<decimal>.SuccessResponse(soTienGiam, "Sử dụng điểm thành công");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi sử dụng điểm cho MaKhachHang {maKhachHang}: {ex.Message}");
+                return ApiResponse<decimal>.ErrorResponse($"Lỗi khi sử dụng điểm: {ex.Message}");
+            }
+        }
+        public async Task<ApiResponse<PointProgram>> GetPointProgramByIdAsync(string maCT)
+        {
+            try
+            {
+                if (!int.TryParse(maCT, out int maCTInt))
+                {
+                    Console.WriteLine($"Mã chương trình không hợp lệ: {maCT}");
+                    return ApiResponse<PointProgram>.ErrorResponse("Mã chương trình không hợp lệ");
+                }
+
+                var pointProgram = await _db.QueryFirstOrDefaultStoredProcedureAsync<PointProgram>(
+                    "sp_PointProgram_GetById", new { MaCT = maCTInt });
+                if (pointProgram == null)
+                {
+                    Console.WriteLine($"Không tìm thấy chương trình điểm với MaCT: {maCT}");
+                    return ApiResponse<PointProgram>.ErrorResponse("Không tìm thấy chương trình điểm");
+                }
+
+                Console.WriteLine($"Tìm thấy chương trình điểm: MaCT = {maCT}, MucGiamGia = {pointProgram.MucGiamGia}");
+                return ApiResponse<PointProgram>.SuccessResponse(pointProgram, "Lấy thông tin chương trình điểm thành công");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy chương trình điểm: {ex.Message}");
+                return ApiResponse<PointProgram>.ErrorResponse($"Lỗi khi lấy chương trình điểm: {ex.Message}");
             }
         }
     }
