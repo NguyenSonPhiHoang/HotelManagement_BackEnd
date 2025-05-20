@@ -7,9 +7,12 @@ namespace HotelManagement.Model
         public int MaPhong { get; set; }
         public DateTime GioCheckIn { get; set; }
         public DateTime GioCheckOut { get; set; }
-        public string TrangThai { get; set; } // Pending, Confirmed, Cancelled
+        public string TrangThai { get; set; }
         public DateTime NgayDat { get; set; }
+        public decimal TongTien { get; set; }
+        public string LoaiTinhTien { get; set; }
     }
+
     public class BookingCreateRequest
     {
         public int MaKhachHang { get; set; }
@@ -17,5 +20,6 @@ namespace HotelManagement.Model
         public DateTime GioCheckIn { get; set; }
         public DateTime GioCheckOut { get; set; }
         public DateTime NgayDat { get; set; }
+        public string LoaiTinhTien { get; set; }
     }
 }

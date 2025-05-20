@@ -1,12 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
 using HotelManagement.Model;
 using HotelManagement.Services;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
-using HotelManagement.DataReader;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace HotelManagement.Controllers
 {
@@ -24,8 +20,12 @@ namespace HotelManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] BookingCreateRequest request)
         {
-            if (request == null || request.MaKhachHang <= 0 || request.MaPhong <= 0)
-                return BadRequest(new { success = false, message = "Dữ liệu đặt phòng không hợp lệ", data = (int?)null });
+            Console.WriteLine($"Request LoaiTinhTien: {request.LoaiTinhTien}");
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine("ModelState không hợp lệ");
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", data = (int?)null });
+            }
 
             var booking = new Booking
             {
@@ -34,9 +34,11 @@ namespace HotelManagement.Controllers
                 GioCheckIn = request.GioCheckIn,
                 GioCheckOut = request.GioCheckOut,
                 NgayDat = request.NgayDat,
+                LoaiTinhTien = request.LoaiTinhTien?.Trim(), // Gán và loại bỏ khoảng trắng
                 TrangThai = "Pending" // Mặc định
             };
 
+            Console.WriteLine($"Booking LoaiTinhTien sau ánh xạ: {booking.LoaiTinhTien}");
             var response = await _repository.CreateAsync(booking);
             if (!response.Success)
                 return BadRequest(new { success = false, message = response.Message, data = (int?)null });
@@ -53,13 +55,13 @@ namespace HotelManagement.Controllers
         public async Task<IActionResult> Update(int maDatPhong, [FromBody] Booking booking)
         {
             if (maDatPhong != booking.MaDatPhong)
-                return StatusCode(400, new { success = false, message = "Mã đặt phòng không khớp", data = false });
+                return BadRequest(new { success = false, message = "Mã đặt phòng không khớp", data = false });
 
             var response = await _repository.UpdateAsync(booking);
             if (!response.Success)
-                return StatusCode(400, new { success = false, message = response.Message, data = false });
+                return BadRequest(new { success = false, message = response.Message, data = false });
 
-            return StatusCode(200, new
+            return Ok(new
             {
                 success = response.Success,
                 message = response.Message,
@@ -72,9 +74,9 @@ namespace HotelManagement.Controllers
         {
             var response = await _repository.DeleteAsync(maDatPhong);
             if (!response.Success)
-                return StatusCode(400, new { success = false, message = response.Message, data = false });
+                return BadRequest(new { success = false, message = response.Message, data = false });
 
-            return StatusCode(200, new
+            return Ok(new
             {
                 success = response.Success,
                 message = response.Message,
@@ -87,9 +89,9 @@ namespace HotelManagement.Controllers
         {
             var response = await _repository.GetByIdAsync(maDatPhong);
             if (!response.Success)
-                return StatusCode(404, new { success = false, message = response.Message, data = (Booking)null });
+                return NotFound(new { success = false, message = response.Message, data = (Booking)null });
 
-            return StatusCode(200, new
+            return Ok(new
             {
                 success = response.Success,
                 message = response.Message,
@@ -107,9 +109,9 @@ namespace HotelManagement.Controllers
         {
             var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
             if (!result.Success)
-                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<Booking>)null });
+                return BadRequest(new { success = false, message = result.Message, data = (IEnumerable<Booking>)null });
 
-            return StatusCode(200, new
+            return Ok(new
             {
                 success = result.Success,
                 message = result.Message,
@@ -124,13 +126,13 @@ namespace HotelManagement.Controllers
         public async Task<IActionResult> SearchByMaDatPhong([FromQuery] int maDatPhong)
         {
             if (maDatPhong <= 0)
-                return StatusCode(400, new { success = false, message = "Mã đặt phòng phải lớn hơn 0", data = (Booking)null });
+                return BadRequest(new { success = false, message = "Mã đặt phòng phải lớn hơn 0", data = (Booking)null });
 
             var response = await _repository.SearchByMaDatPhongAsync(maDatPhong);
             if (!response.Success)
-                return StatusCode(404, new { success = false, message = response.Message, data = (Booking)null });
+                return NotFound(new { success = false, message = response.Message, data = (Booking)null });
 
-            return StatusCode(200, new
+            return Ok(new
             {
                 success = response.Success,
                 message = response.Message,

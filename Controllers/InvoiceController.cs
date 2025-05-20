@@ -18,13 +18,31 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Invoice invoice)
+        public async Task<IActionResult> Create([FromBody] InvoiceCreateRequest request)
         {
-            var response = await _repository.CreateAsync(invoice);
+            var response = await _repository.CreateAsync(request);
             if (!response.Success)
                 return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
 
             return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+
+        [HttpPost("services")]
+        public async Task<IActionResult> AddService([FromBody] InvoiceServiceCreateRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", data = false });
+
+            var response = await _repository.AddServiceAsync(request);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = false });
+
+            return Ok(new
             {
                 success = response.Success,
                 message = response.Message,
