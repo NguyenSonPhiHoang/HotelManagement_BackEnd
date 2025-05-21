@@ -27,5 +27,26 @@ namespace HotelManagement.Model
         public string Phone { get; set; }
 
         public int MaVaiTro { get; set; } = 4; // Mặc định là Customer
+
     }
+      public class OtpVerificationRequest
+        {
+            public int MaTaiKhoan { get; set; }
+            public string OtpCode { get; set; } = null!;
+        }
+
+        public class OtpResendRequest
+        {
+            public int MaTaiKhoan { get; set; }
+            public string Email { get; set; } = null!;
+        }
+
+        public class OtpVerification
+        {
+            public int MaTaiKhoan { get; set; }
+            public string OtpCode { get; set; } = null!;
+            public string Email { get; set; } = null!;
+            public DateTime CreatedAt { get; set; }
+            public DateTime ExpiresAt { get; set; }
+        }
 }

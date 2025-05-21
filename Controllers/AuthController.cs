@@ -35,21 +35,6 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
-        {
-            var response = await _authRepository.RegisterAsync(request);
-            if (!response.Success)
-                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
-
-            return StatusCode(201, new
-            {
-                success = response.Success,
-                message = response.Message,
-                data = response.Data
-            });
-        }
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
         {
@@ -58,6 +43,59 @@ namespace HotelManagement.Controllers
                 return BadRequest(new { response.Success, response.Message, response.Data });
 
             return Ok(new { response.Success, response.Message, response.Data });
+        }
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", data = (int?)null });
+
+            var response = await _authRepository.RegisterAsync(request);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = (int?)null });
+
+            return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOtp([FromBody] OtpVerificationRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", data = false });
+
+            var response = await _authRepository.VerifyOtpAsync(request);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = false });
+
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+
+        [HttpPost("resend-otp")]
+        public async Task<IActionResult> ResendOtp([FromBody] OtpResendRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", data = false });
+
+            var response = await _authRepository.ResendOtpAsync(request);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = false });
+
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
 }
