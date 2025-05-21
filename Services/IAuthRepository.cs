@@ -15,80 +15,24 @@ namespace HotelManagement.Services
         Task<ApiResponse<TokenResponse>> LoginAsync(LoginRequest request);
         Task<ApiResponse<int>> RegisterAsync(RegisterRequest request);
         Task<ApiResponse<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request);
+        Task<ApiResponse<bool>> VerifyOtpAsync(OtpVerificationRequest request);
+        Task<ApiResponse<bool>> ResendOtpAsync(OtpResendRequest request);
     }
     public class AuthRepository : IAuthRepository
     {
         private readonly DatabaseDapper _db;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
         private readonly int _accessTokenExpiryMinutes = 60; // 1 giờ
         private readonly int _refreshTokenExpiryDays = 7; // 7 ngày
 
-        public AuthRepository(DatabaseDapper db, IConfiguration configuration)
+        public AuthRepository(DatabaseDapper db, IConfiguration configuration, IEmailService emailService)
         {
             _db = db;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
-        public async Task<ApiResponse<TokenResponse>> LoginAsync(LoginRequest request)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(request.TenTaiKhoan) || string.IsNullOrEmpty(request.MatKhau))
-                {
-                    Console.WriteLine("Tên tài khoản hoặc mật khẩu trống");
-                    return ApiResponse<TokenResponse>.ErrorResponse("Tên tài khoản và mật khẩu không được để trống");
-                }
-
-                var hashedPassword = PasswordHasher.HashPassword(request.MatKhau);
-                var parameters = new
-                {
-                    TenTaiKhoan = request.TenTaiKhoan,
-                    MatKhau = hashedPassword
-                };
-
-                Console.WriteLine($"Gọi sp_Login với TenTaiKhoan: {request.TenTaiKhoan}");
-                var user = await _db.QueryFirstOrDefaultStoredProcedureAsync<TokenResponse>("sp_Login", parameters);
-                if (user == null || user.MaTaiKhoan <= 0)
-                {
-                    Console.WriteLine("Không tìm thấy tài khoản hoặc mật khẩu không đúng");
-                    return ApiResponse<TokenResponse>.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng");
-                }
-                Console.WriteLine($"Tìm thấy tài khoản: MaTaiKhoan = {user.MaTaiKhoan}, TenTaiKhoan = {user.TenTaiKhoan}");
-
-                if (string.IsNullOrEmpty(_configuration["Jwt:SecretKey"]) ||
-                    string.IsNullOrEmpty(_configuration["Jwt:Issuer"]) ||
-                    string.IsNullOrEmpty(_configuration["Jwt:Audience"]))
-                {
-                    Console.WriteLine("Cấu hình JWT bị thiếu");
-                    return ApiResponse<TokenResponse>.ErrorResponse("Cấu hình JWT không hợp lệ");
-                }
-
-                var accessToken = GenerateJwtToken(user);
-                var refreshToken = GenerateRefreshToken(); // Sử dụng phương thức mới
-                var expiresIn = _accessTokenExpiryMinutes * 60;
-
-                Console.WriteLine($"Lưu RefreshToken cho MaTaiKhoan: {user.MaTaiKhoan}");
-                await _db.ExecuteStoredProcedureAsync("sp_UserToken_Create", new
-                {
-                    MaTaiKhoan = user.MaTaiKhoan,
-                    AccessToken = accessToken,
-                    RefreshToken = refreshToken,
-                    NgayHetHan = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays)
-                });
-                Console.WriteLine("Lưu RefreshToken thành công");
-
-                user.AccessToken = accessToken;
-                user.RefreshToken = refreshToken;
-                user.ExpiresIn = expiresIn;
-
-                return ApiResponse<TokenResponse>.SuccessResponse(user, "Đăng nhập thành công");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Lỗi khi đăng nhập: {ex.Message}");
-                return ApiResponse<TokenResponse>.ErrorResponse($"Lỗi khi đăng nhập: {ex.Message}");
-            }
-        }
 
         // Phương thức mới để tạo RefreshToken
         private string GenerateRefreshToken()
@@ -100,7 +44,104 @@ namespace HotelManagement.Services
                 return Convert.ToBase64String(randomNumber);
             }
         }
+        public async Task<ApiResponse<TokenResponse>> LoginAsync(LoginRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.TenTaiKhoan) || string.IsNullOrEmpty(request.MatKhau))
+                {
+                    Console.WriteLine("Tên tài khoản hoặc mật khẩu trống");
+                    return ApiResponse<TokenResponse>.ErrorResponse("Tên tài khoản và mật khẩu không được để trống");
+                }
 
+                Console.WriteLine($"Đang tìm tài khoản với TenTaiKhoan: {request.TenTaiKhoan}");
+                // Sử dụng SP thay vì truy vấn trực tiếp
+                var account = await _db.QueryFirstOrDefaultStoredProcedureAsync<dynamic>(
+                    "sp_Login",
+                    new { TenTaiKhoan = request.TenTaiKhoan });
+
+                if (account == null)
+                {
+                    Console.WriteLine($"Không tìm thấy tài khoản với TenTaiKhoan: {request.TenTaiKhoan}");
+                    return ApiResponse<TokenResponse>.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng");
+                }
+
+                Console.WriteLine($"Tài khoản tìm thấy: MaTaiKhoan = {account.MaTaiKhoan}, Hash lưu: {account.MatKhau}");
+                if (!PasswordHasher.VerifyPassword(request.MatKhau, account.MatKhau))
+                {
+                    Console.WriteLine($"Xác minh mật khẩu thất bại cho TenTaiKhoan: {request.TenTaiKhoan}");
+                    return ApiResponse<TokenResponse>.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng");
+                }
+
+                Console.WriteLine($"Kiểm tra OTP cho MaTaiKhoan: {account.MaTaiKhoan}");
+                // Sử dụng EXISTS thay vì trả về boolean
+                var otpCount = await _db.QueryFirstOrDefaultAsync<int>(
+                    "SELECT COUNT(1) FROM OtpVerification WHERE MaTaiKhoan = @MaTaiKhoan",
+                    new { MaTaiKhoan = account.MaTaiKhoan });
+
+                if (otpCount > 0)
+                {
+                    Console.WriteLine($"Tài khoản chưa xác minh OTP: MaTaiKhoan = {account.MaTaiKhoan}");
+                    return ApiResponse<TokenResponse>.ErrorResponse("Tài khoản chưa được kích hoạt. Vui lòng xác minh OTP.");
+                }
+
+                var user = new TokenResponse
+                {
+                    MaTaiKhoan = account.MaTaiKhoan,
+                    TenTaiKhoan = account.TenTaiKhoan,
+                    TenHienThi = account.TenHienThi,
+                    Email = account.Email,
+                    Phone = account.Phone,
+                    MaVaiTro = account.MaVaiTro
+                };
+
+                var accessToken = GenerateJwtToken(user);
+                var refreshToken = GenerateRefreshToken();
+                var expiresIn = _accessTokenExpiryMinutes * 60;
+
+                Console.WriteLine($"Lưu RefreshToken cho MaTaiKhoan: {user.MaTaiKhoan}");
+
+                // Kiểm tra SP có tồn tại không
+                try
+                {
+                    await _db.ExecuteStoredProcedureAsync("sp_UserToken_Create", new
+                    {
+                        MaTaiKhoan = user.MaTaiKhoan,
+                        AccessToken = accessToken,
+                        RefreshToken = refreshToken,
+                        NgayHetHan = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays)
+                    });
+                    Console.WriteLine("Lưu RefreshToken thành công");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi lưu RefreshToken: {ex.Message}");
+                    // Lưu trực tiếp vào bảng nếu SP gây lỗi
+                    await _db.ExecuteAsync(@"
+                INSERT INTO UserToken (MaTaiKhoan, AccessToken, RefreshToken, NgayHetHan) 
+                VALUES (@MaTaiKhoan, @AccessToken, @RefreshToken, @NgayHetHan)",
+                        new
+                        {
+                            MaTaiKhoan = user.MaTaiKhoan,
+                            AccessToken = accessToken,
+                            RefreshToken = refreshToken,
+                            NgayHetHan = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays)
+                        });
+                }
+
+                user.AccessToken = accessToken;
+                user.RefreshToken = refreshToken;
+                user.ExpiresIn = expiresIn;
+
+                Console.WriteLine($"Đăng nhập thành công: MaTaiKhoan = {user.MaTaiKhoan}");
+                return ApiResponse<TokenResponse>.SuccessResponse(user, "Đăng nhập thành công");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi đăng nhập: {ex.Message}");
+                return ApiResponse<TokenResponse>.ErrorResponse($"Lỗi khi đăng nhập: {ex.Message}");
+            }
+        }
         private string GenerateJwtToken(TokenResponse user)
         {
             var secret = _configuration["Jwt:SecretKey"];
@@ -147,33 +188,129 @@ namespace HotelManagement.Services
 
             try
             {
+                // Kiểm tra TenTaiKhoan và Email tồn tại
+                var usernameExists = await _db.QueryFirstOrDefaultAsync<bool>(
+                    "SELECT 1 FROM Account WHERE TenTaiKhoan = @TenTaiKhoan", new { request.TenTaiKhoan });
+                if (usernameExists)
+                    return ApiResponse<int>.ErrorResponse("Tên tài khoản đã tồn tại");
+
+                var emailExists = await _db.QueryFirstOrDefaultAsync<bool>(
+                    "SELECT 1 FROM Account WHERE Email = @Email", new { request.Email });
+                if (emailExists)
+                    return ApiResponse<int>.ErrorResponse("Email đã tồn tại");
+
+                // Mã hóa mật khẩu
                 var hashedPassword = PasswordHasher.HashPassword(request.MatKhau);
+
+                // Lưu tài khoản
                 var parameters = new
                 {
                     request.TenTaiKhoan,
                     MatKhau = hashedPassword,
                     request.TenHienThi,
                     request.Email,
-                    request.Phone,
-                    request.MaVaiTro
+                    request.Phone
                 };
 
-                Console.WriteLine($"Gọi sp_Register với TenTaiKhoan: {request.TenTaiKhoan}");
-                var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<dynamic>("sp_Register", parameters);
+                Console.WriteLine($"Gọi sp_Account_InsertWithTempStatus với TenTaiKhoan: {request.TenTaiKhoan}");
+                var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<dynamic>("sp_Account_InsertWithTempStatus", parameters);
                 if (result != null && result.MaTaiKhoan > 0)
                 {
-                    Console.WriteLine($"Đăng ký thành công: MaTaiKhoan = {result.MaTaiKhoan}");
-                    return ApiResponse<int>.SuccessResponse((int)result.MaTaiKhoan, result.ThongBao ?? "Đăng ký thành công");
+                    // Tạo OTP
+                    string otpCode = GenerateOtp();
+                    DateTime createdAt = DateTime.UtcNow;
+                    DateTime expiresAt = createdAt.AddMinutes(2);
+
+                    // Lưu OTP vào OtpVerification
+                    await _db.ExecuteStoredProcedureAsync("sp_OtpVerification_Insert", new
+                    {
+                        MaTaiKhoan = result.MaTaiKhoan,
+                        OtpCode = otpCode,
+                        request.Email,
+                        CreatedAt = createdAt,
+                        ExpiresAt = expiresAt
+                    });
+
+                    // Gửi OTP qua email
+                    await _emailService.SendEmailAsync(request.Email, "Xác minh OTP", $"Mã OTP của bạn là: {otpCode}. Hiệu lực trong 2 phút.");
+
+                    Console.WriteLine($"Đăng ký thành công: MaTaiKhoan = {result.MaTaiKhoan}, OTP gửi tới {request.Email}");
+                    return ApiResponse<int>.SuccessResponse((int)result.MaTaiKhoan, "Đăng ký thành công, vui lòng kiểm tra email để lấy OTP");
                 }
 
                 Console.WriteLine("Đăng ký thất bại");
-                return ApiResponse<int>.ErrorResponse(result?.ThongBao ?? "Đăng ký thất bại");
+                return ApiResponse<int>.ErrorResponse("Đăng ký thất bại");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi đăng ký: {ex.Message}");
                 return ApiResponse<int>.ErrorResponse($"Lỗi khi đăng ký: {ex.Message}");
             }
+        }
+        public async Task<ApiResponse<bool>> VerifyOtpAsync(OtpVerificationRequest request)
+        {
+            try
+            {
+                var otp = await _db.QueryFirstOrDefaultStoredProcedureAsync<OtpVerification>("sp_OtpVerification_GetByAccountId", new { request.MaTaiKhoan });
+                if (otp == null)
+                    return ApiResponse<bool>.ErrorResponse("Không tìm thấy OTP");
+
+                if (otp.ExpiresAt < DateTime.UtcNow)
+                    return ApiResponse<bool>.ErrorResponse("Mã OTP đã hết hạn");
+
+                if (otp.OtpCode != request.OtpCode)
+                    return ApiResponse<bool>.ErrorResponse("Mã OTP không đúng");
+
+                // Xóa OTP để đánh dấu tài khoản đã kích hoạt
+                var rowsAffected = await _db.ExecuteAsync("DELETE FROM OtpVerification WHERE MaTaiKhoan = @MaTaiKhoan", new { request.MaTaiKhoan });
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Xác minh OTP thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Xác minh OTP thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xác minh OTP: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> ResendOtpAsync(OtpResendRequest request)
+        {
+            try
+            {
+                var otp = await _db.QueryFirstOrDefaultStoredProcedureAsync<OtpVerification>("sp_OtpVerification_GetByAccountId", new { request.MaTaiKhoan });
+                if (otp == null)
+                    return ApiResponse<bool>.ErrorResponse("Không tìm thấy OTP");
+
+                // Tạo OTP mới
+                string newOtpCode = GenerateOtp();
+                DateTime createdAt = DateTime.UtcNow;
+                DateTime expiresAt = createdAt.AddMinutes(2);
+
+                // Cập nhật OTP
+                await _db.ExecuteStoredProcedureAsync("sp_OtpVerification_Insert", new
+                {
+                    request.MaTaiKhoan,
+                    OtpCode = newOtpCode,
+                    request.Email,
+                    CreatedAt = createdAt,
+                    ExpiresAt = expiresAt
+                });
+
+                // Gửi OTP mới qua email
+                await _emailService.SendEmailAsync(request.Email, "Xác minh OTP", $"Mã OTP mới của bạn là: {newOtpCode}. Hiệu lực trong 2 phút.");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Gửi lại OTP thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi gửi lại OTP: {ex.Message}");
+            }
+        }
+
+        private string GenerateOtp()
+        {
+            return RandomNumberGenerator.GetInt32(100000, 999999).ToString("D6");
         }
 
         private bool ValidateRegisterRequest(RegisterRequest request, out string errorMessage)

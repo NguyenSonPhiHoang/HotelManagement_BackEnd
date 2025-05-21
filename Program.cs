@@ -33,6 +33,14 @@ builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IPointHistoryRepository, PointHistoryRepository>();
 builder.Services.AddScoped<IPointProgramRepository, PointProgramRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+builder.Services.AddSingleton<IEmailService>(sp => 
+    new EmailService(
+        builder.Configuration["SmtpSettings:Server"],
+        int.Parse(builder.Configuration["SmtpSettings:Port"]),
+        builder.Configuration["SmtpSettings:Username"],
+        builder.Configuration["SmtpSettings:Password"]
+    ));
 // Cấu hình JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
