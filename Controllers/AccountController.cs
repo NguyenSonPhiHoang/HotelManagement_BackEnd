@@ -112,28 +112,40 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Account account)
+        public async Task<IActionResult> Update(int id, [FromBody] ModifyAccount modifyAccount)
         {
-            if (id != account.MaTaiKhoan)
-                return BadRequest(new { success = false, message = "Mã tài khoản không khớp", data = false });
+            if (modifyAccount == null)
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", data = false });
 
             var existingAccount = await _accountRepository.GetByIdAsync(id);
             if (!existingAccount.Success)
                 return NotFound(new { success = false, message = "Không tìm thấy tài khoản", data = false });
 
-            if (existingAccount.Data.TenTaiKhoan != account.TenTaiKhoan)
+            if (existingAccount.Data.TenTaiKhoan != modifyAccount.TenTaiKhoan)
             {
-                var usernameExists = await _accountRepository.IsUsernameExistsAsync(account.TenTaiKhoan);
+                var usernameExists = await _accountRepository.IsUsernameExistsAsync(modifyAccount.TenTaiKhoan);
                 if (usernameExists.Success && usernameExists.Data)
                     return BadRequest(new { success = false, message = "Tên tài khoản đã tồn tại", data = false });
             }
 
-            if (existingAccount.Data.Email != account.Email)
+            if (existingAccount.Data.Email != modifyAccount.Email)
             {
-                var emailExists = await _accountRepository.IsEmailExistsAsync(account.Email);
+                var emailExists = await _accountRepository.IsEmailExistsAsync(modifyAccount.Email);
                 if (emailExists.Success && emailExists.Data)
                     return BadRequest(new { success = false, message = "Email đã tồn tại", data = false });
             }
+
+            // Tạo Account từ ModifyAccount và id
+            var account = new Account
+            {
+                MaTaiKhoan = id,
+                TenTaiKhoan = modifyAccount.TenTaiKhoan,
+                MatKhau = modifyAccount.MatKhau ?? existingAccount.Data.MatKhau, // Giữ nguyên mật khẩu nếu không được cung cấp
+                TenHienThi = modifyAccount.TenHienThi,
+                Email = modifyAccount.Email,
+                Phone = modifyAccount.Phone,
+                MaVaiTro = modifyAccount.MaVaiTro
+            };
 
             var response = await _accountRepository.UpdateAsync(account);
             if (!response.Success)
@@ -146,7 +158,6 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

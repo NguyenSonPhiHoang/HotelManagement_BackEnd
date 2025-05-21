@@ -11,7 +11,7 @@ namespace HotelManagement.Services
     {
         Task<ApiResponse<IEnumerable<Role>>> GetAllAsync();
         Task<ApiResponse<Role>> GetByIdAsync(string maVaiTro);
-        Task<ApiResponse<int>> CreateAsync(Role role);
+        Task<ApiResponse<int>> CreateAsync(AddRole addRole);
         Task<ApiResponse<bool>> UpdateAsync(Role role);
         Task<ApiResponse<bool>> DeleteAsync(string maVaiTro);
     }
@@ -54,20 +54,16 @@ namespace HotelManagement.Services
             }
         }
 
-        public async Task<ApiResponse<int>> CreateAsync(Role role)
+        public async Task<ApiResponse<int>> CreateAsync(AddRole addRole)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(role.MaVaiTro))
-                    return ApiResponse<int>.ErrorResponse("Mã vai trò không được để trống");
-
-                if (string.IsNullOrWhiteSpace(role.TenVaiTro))
+                if (string.IsNullOrWhiteSpace(addRole.TenVaiTro))
                     return ApiResponse<int>.ErrorResponse("Tên vai trò không được để trống");
 
                 var parameters = new
                 {
-                    role.MaVaiTro,
-                    role.TenVaiTro
+                    TenVaiTro = addRole.TenVaiTro
                 };
 
                 var result = await _db.ExecuteStoredProcedureAsync("sp_InsertRole", parameters);
