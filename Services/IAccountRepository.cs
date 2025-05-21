@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using HotelManagement.Utilities;
 using HotelManagement.DataReader;
+using System.Data;
 
 namespace HotelManagement.Services
 {
@@ -114,6 +115,9 @@ namespace HotelManagement.Services
         {
             try
             {
+                // Tạo câu SQL trực tiếp để gọi stored procedure
+                string sql = "EXEC sp_Account_Update @MaTaiKhoan, @TenTaiKhoan, @TenHienThi, @Email, @Phone, @MaVaiTro; SELECT @@ROWCOUNT AS RowsAffected;";
+
                 var parameters = new
                 {
                     account.MaTaiKhoan,
@@ -124,8 +128,11 @@ namespace HotelManagement.Services
                     account.MaVaiTro
                 };
 
-                int rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Account_Update", parameters);
-                if (rowsAffected <= 0)
+                // Gọi stored procedure và nhận kết quả
+                var result = await _db.QueryFirstOrDefaultAsync<int>(sql, parameters);
+
+                // Kiểm tra kết quả
+                if (result <= 0)
                     return ApiResponse<bool>.ErrorResponse("Cập nhật tài khoản thất bại");
 
                 return ApiResponse<bool>.SuccessResponse(true, "Cập nhật tài khoản thành công");
@@ -135,7 +142,6 @@ namespace HotelManagement.Services
                 return ApiResponse<bool>.ErrorResponse($"Lỗi khi cập nhật tài khoản: {ex.Message}");
             }
         }
-
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {
             try

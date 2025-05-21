@@ -47,9 +47,12 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateRole([FromBody] Role role)
+        public async Task<IActionResult> CreateRole([FromBody] AddRole addRole)
         {
-            var response = await _roleRepository.CreateAsync(role);
+            if (addRole == null || string.IsNullOrWhiteSpace(addRole.TenVaiTro))
+                return StatusCode(400, new { success = false, message = "Tên vai trò không được để trống", data = (int?)null });
+
+            var response = await _roleRepository.CreateAsync(addRole);
             if (!response.Success)
                 return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
 
@@ -60,7 +63,6 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
-
         [HttpPut("{maVaiTro}")]
         public async Task<IActionResult> UpdateRole(string maVaiTro, [FromBody] Role role)
         {
