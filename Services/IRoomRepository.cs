@@ -12,10 +12,10 @@ namespace HotelManagement.Services
         Task<ApiResponse<IEnumerable<Room>>> GetRoomsByFilterAsync(string trangThai, string loaiPhong, string tinhTrang);
         Task<ApiResponse<Room>> GetRoomBySoPhongAsync(string soPhong);
         Task<(ApiResponse<IEnumerable<Room>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null, string? trangThai = null, 
+            int pageNumber, int pageSize, string? searchTerm = null, string? trangThai = null,
             int? loaiPhong = null, string? tinhTrang = null, string? sortBy = "MaPhong", string? sortOrder = "ASC");
         Task<ApiResponse<Room>> GetByIdAsync(int maPhong);
-        Task<ApiResponse<int>> CreateAsync(Room room);
+        Task<ApiResponse<int>> CreateAsync(CreateRequestRoom room);
         Task<ApiResponse<bool>> UpdateAsync(Room room);
         Task<ApiResponse<bool>> DeleteAsync(int maPhong);
     }
@@ -66,7 +66,7 @@ namespace HotelManagement.Services
         }
 
         public async Task<(ApiResponse<IEnumerable<Room>> Items, int TotalCount)> GetAllAsync(
-            int pageNumber, int pageSize, string? searchTerm = null, string? trangThai = null, 
+            int pageNumber, int pageSize, string? searchTerm = null, string? trangThai = null,
             int? loaiPhong = null, string? tinhTrang = null, string? sortBy = "MaPhong", string? sortOrder = "ASC")
         {
             try
@@ -111,24 +111,38 @@ namespace HotelManagement.Services
             }
         }
 
-        public async Task<ApiResponse<int>> CreateAsync(Room room)
+        public async Task<ApiResponse<int>> CreateAsync(CreateRequestRoom room)
         {
             try
             {
+                if (room == null || string.IsNullOrWhiteSpace(room.SoPhong) || room.LoaiPhong <= 0)
+                {
+                    Console.WriteLine("Dữ liệu phòng không hợp lệ");
+                    return ApiResponse<int>.ErrorResponse("Dữ liệu phòng không hợp lệ");
+                }
+
                 var parameters = new
                 {
                     room.SoPhong,
-                    room.LoaiPhong,
-                    room.GiaPhong,
+                    LoaiPhong = room.LoaiPhong,
                     room.TrangThai,
                     room.TinhTrang
                 };
 
-                var maPhong = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Room_Create", parameters);
-                return ApiResponse<int>.SuccessResponse(maPhong, "Tạo phòng thành công");
+                Console.WriteLine($"Gọi sp_Room_Create với SoPhong: {room.SoPhong}, LoaiPhong: {room.LoaiPhong}");
+                var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<dynamic>("sp_Room_Create", parameters);
+                if (result == null || result.MaPhong <= 0)
+                {
+                    Console.WriteLine("Tạo phòng thất bại: " + (result?.ThongBao ?? "Không có thông báo"));
+                    return ApiResponse<int>.ErrorResponse(result?.ThongBao ?? "Tạo phòng thất bại");
+                }
+
+                Console.WriteLine($"Tạo phòng thành công: MaPhong = {result.MaPhong}");
+                return ApiResponse<int>.SuccessResponse(result.MaPhong, result.ThongBao ?? "Tạo phòng thành công");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Lỗi khi tạo phòng: {ex.Message}");
                 return ApiResponse<int>.ErrorResponse($"Lỗi khi tạo phòng: {ex.Message}");
             }
         }

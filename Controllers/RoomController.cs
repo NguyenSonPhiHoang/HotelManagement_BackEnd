@@ -95,7 +95,7 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Room room)
+        public async Task<IActionResult> Create([FromBody] CreateRequestRoom room)
         {
             var response = await _roomRepository.CreateAsync(room);
             if (!response.Success)
