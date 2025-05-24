@@ -9,5 +9,12 @@ namespace HotelManagement.Model
         public string LoaiPhong { get; set; }
         public string TinhTrang { get; set; }
     }
+    public class CreateRequestRoom
+    {
+        public string SoPhong { get; set; }
+        public string TrangThai { get; set; }
+        public int LoaiPhong { get; set; } 
+        public string TinhTrang { get; set; }
+    }
 
 }
