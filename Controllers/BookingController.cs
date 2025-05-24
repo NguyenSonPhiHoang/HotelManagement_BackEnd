@@ -52,22 +52,20 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPut("{maDatPhong}")]
-        public async Task<IActionResult> Update(int maDatPhong, [FromBody] Booking booking)
+        public async Task<IActionResult> Update(int maDatPhong, [FromBody] BookingUpdateRequest request)
         {
-            if (maDatPhong != booking.MaDatPhong)
-                return BadRequest(new { success = false, message = "Mã đặt phòng không khớp", data = false });
-
-            var response = await _repository.UpdateAsync(booking);
-            if (!response.Success)
-                return BadRequest(new { success = false, message = response.Message, data = false });
-
-            return Ok(new
+            if (request == null)
             {
-                success = response.Success,
-                message = response.Message,
-                data = response.Data
-            });
+                return BadRequest(ApiResponse<bool>.ErrorResponse("Dữ liệu cập nhật không hợp lệ"));
+            }
+
+            var response = await _repository.UpdateAsync(maDatPhong, request);
+
+            return response.Success
+                ? Ok(response)
+                : BadRequest(response);
         }
+
 
         [HttpDelete("{maDatPhong}")]
         public async Task<IActionResult> Delete(int maDatPhong)
@@ -119,24 +117,6 @@ namespace HotelManagement.Controllers
                 totalCount,
                 pageNumber,
                 pageSize
-            });
-        }
-
-        [HttpGet("search")]
-        public async Task<IActionResult> SearchByMaDatPhong([FromQuery] int maDatPhong)
-        {
-            if (maDatPhong <= 0)
-                return BadRequest(new { success = false, message = "Mã đặt phòng phải lớn hơn 0", data = (Booking)null });
-
-            var response = await _repository.SearchByMaDatPhongAsync(maDatPhong);
-            if (!response.Success)
-                return NotFound(new { success = false, message = response.Message, data = (Booking)null });
-
-            return Ok(new
-            {
-                success = response.Success,
-                message = response.Message,
-                data = response.Data
             });
         }
 

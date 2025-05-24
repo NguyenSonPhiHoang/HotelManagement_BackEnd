@@ -22,4 +22,12 @@ namespace HotelManagement.Model
         public DateTime NgayDat { get; set; }
         public string LoaiTinhTien { get; set; }
     }
+    public class BookingUpdateRequest
+    {
+        public int MaPhong { get; set; }
+        public DateTime GioCheckIn { get; set; }
+        public DateTime GioCheckOut { get; set; }
+        public string LoaiTinhTien { get; set; }
+    }
+
 }
