@@ -9,7 +9,7 @@ namespace HotelManagement.Services
 {
     public interface IPointProgramRepository
     {
-        Task<ApiResponse<int>> CreateAsync(PointProgram pointProgram);
+        Task<ApiResponse<int>> CreateAsync(PointProgramCreateRequest PointProgramCreateRequest);
         Task<ApiResponse<bool>> UpdateAsync(PointProgram pointProgram);
         Task<ApiResponse<bool>> DeleteAsync(int maCT);
         Task<ApiResponse<PointProgram>> GetByIdAsync(int maCT);
@@ -26,15 +26,18 @@ namespace HotelManagement.Services
             _db = db;
         }
 
-        public async Task<ApiResponse<int>> CreateAsync(PointProgram pointProgram)
+        public async Task<ApiResponse<int>> CreateAsync(PointProgramCreateRequest PointProgramCreateRequest)
         {
             try
             {
+                Console.WriteLine($"TyLeTichDiem value: {PointProgramCreateRequest.TyLeTichDiem}");
+
                 var parameters = new
                 {
-                    pointProgram.TenCT,
-                    pointProgram.DiemToiThieu,
-                    pointProgram.MucGiamGia
+                    PointProgramCreateRequest.TenCT,
+                    PointProgramCreateRequest.DiemToiThieu,
+                    PointProgramCreateRequest.MucGiamGia,
+                    PointProgramCreateRequest.TyLeTichDiem
                 };
 
                 var maCT = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_PointProgram_Create", parameters);
