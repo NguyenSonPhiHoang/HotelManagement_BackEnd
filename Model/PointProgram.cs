@@ -6,6 +6,14 @@ namespace HotelManagement.Model
         public string TenCT { get; set; }
         public int DiemToiThieu { get; set; }
         public decimal MucGiamGia { get; set; }
-        public decimal TyLeTichDiem { get; set; } =0.0m;
+        public decimal TyLeTichDiem { get; set; } = 0.0m;
+    }
+    public class PointProgramCreateRequest
+    {
+        public string TenCT { get; set; } = null!;
+        public int DiemToiThieu { get; set; }
+        public decimal MucGiamGia { get; set; }
+        public decimal TyLeTichDiem { get; set; } = 0.0m;   
+
     }
 }

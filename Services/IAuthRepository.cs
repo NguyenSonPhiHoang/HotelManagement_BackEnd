@@ -242,7 +242,7 @@ namespace HotelManagement.Services
                     });
 
                     // Gửi OTP qua email
-                    await _emailService.SendEmailAsync(request.Email, "Xác minh OTP", $"Mã OTP của bạn là: {otpCode}. Hiệu lực trong 2 phút.");
+                    await _emailService.SendEmailAsync(request.Email, "Xác minh OTP", $"Mã OTP của bạn là: {otpCode}. Mã sẽ hết hiệu lực sớm. Vui lòng nhập mã nay để kích hoạt tài khoản của bạn.");
 
                     Console.WriteLine($"Đăng ký thành công: MaTaiKhoan = {result.MaTaiKhoan}, OTP gửi tới {request.Email}");
                     return ApiResponse<int>.SuccessResponse((int)result.MaTaiKhoan, "Đăng ký thành công, vui lòng kiểm tra email để lấy OTP");

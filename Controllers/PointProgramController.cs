@@ -18,9 +18,9 @@ namespace HotelManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PointProgram pointProgram)
+        public async Task<IActionResult> Create([FromBody] PointProgramCreateRequest PointProgramCreateRequest)
         {
-            var response = await _repository.CreateAsync(pointProgram);
+            var response = await _repository.CreateAsync(PointProgramCreateRequest);
             if (!response.Success)
                 return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
 
