@@ -22,4 +22,9 @@ namespace HotelManagement.Model
         public string Message { get; set; }
         public Room RoomInfo { get; set; }
     }
+    public class UpdateRoomStatusRequest
+{
+    public string TrangThai { get; set; }
+    public string? TinhTrang { get; set; }
+}
 }

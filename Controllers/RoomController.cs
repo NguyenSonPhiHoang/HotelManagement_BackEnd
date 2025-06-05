@@ -141,5 +141,52 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
+        [HttpGet("availability/{maPhong}")]
+        public async Task<IActionResult> CheckRoomAvailability(int maPhong)
+        {
+            var response = await _roomRepository.CheckRoomAvailabilityAsync(maPhong);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (object?)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+
+        [HttpPut("{maPhong}/status")]
+        public async Task<IActionResult> UpdateRoomStatus(int maPhong, [FromBody] UpdateRoomStatusRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.TrangThai))
+                return StatusCode(400, new { success = false, message = "Dữ liệu không hợp lệ", data = false });
+
+            var response = await _roomRepository.UpdateRoomStatusAsync(maPhong, request.TrangThai.Trim(), request.TinhTrang?.Trim());
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+
+        [HttpGet("available")]
+        public async Task<IActionResult> GetAvailableRooms()
+        {
+            var response = await _roomRepository.GetRoomsByFilterAsync("Trống", "Tất cả loại phòng", "Đã dọn dẹp");
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (IEnumerable<Room>)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
     }
 }
