@@ -13,12 +13,10 @@ namespace HotelManagement.Controllers
         private readonly IBookingRepository _repository;
         private readonly IRoomRepository _roomRepository;
 
-
         public BookingController(IBookingRepository repository, IRoomRepository roomRepository)
         {
             _repository = repository;
             _roomRepository = roomRepository;
-
         }
 
         [HttpPost]
@@ -56,29 +54,24 @@ namespace HotelManagement.Controllers
             });
         }
 
-        // Endpoint mới: Kiểm tra phòng có thể đặt được không
-        [HttpGet("check-room/{maPhong}")]
-        public async Task<IActionResult> CheckRoomAvailability(int maPhong)
+        // Endpoint mới: Xác nhận đặt phòng (Pending -> Confirmed)
+        [HttpPut("{maDatPhong}/confirm")]
+        public async Task<IActionResult> ConfirmBooking(int maDatPhong)
         {
-            var response = await _roomRepository.CheckRoomAvailabilityAsync(maPhong);
+            var response = await _repository.ConfirmBookingAsync(maDatPhong);
 
             if (!response.Success)
-                return NotFound(new { success = false, message = response.Message, data = (RoomAvailabilityResult)null });
+                return BadRequest(new { success = false, message = response.Message, data = false });
 
-            var statusCode = response.Data.IsAvailable ? 200 : 400;
-            return StatusCode(statusCode, new
+            return Ok(new
             {
-                success = response.Data.IsAvailable,
-                message = response.Data.Message,
-                data = new
-                {
-                    isAvailable = response.Data.IsAvailable,
-                    roomInfo = response.Data.RoomInfo
-                }
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
             });
         }
 
-        // Endpoint mới: Hoàn thành đặt phòng (thanh toán)
+        // Endpoint: Hoàn thành đặt phòng (Confirmed -> Completed)
         [HttpPut("{maDatPhong}/complete")]
         public async Task<IActionResult> CompleteBooking(int maDatPhong)
         {
@@ -95,7 +88,7 @@ namespace HotelManagement.Controllers
             });
         }
 
-        // Endpoint mới: Hủy đặt phòng
+        // Endpoint: Hủy đặt phòng (Pending/Confirmed -> Cancelled)
         [HttpPut("{maDatPhong}/cancel")]
         public async Task<IActionResult> CancelBooking(int maDatPhong)
         {
@@ -112,15 +105,18 @@ namespace HotelManagement.Controllers
             });
         }
 
-        // Endpoint mới: Lấy danh sách phòng có thể đặt được
-        [HttpGet("available-rooms")]
-        public async Task<IActionResult> GetAvailableRooms()
+        [HttpPut("{maDatPhong}")]
+        public async Task<IActionResult> Update(int maDatPhong, [FromBody] BookingUpdateRequest request)
         {
-            // Lấy phòng trống và đã dọn dẹp
-            var response = await _roomRepository.GetRoomsByFilterAsync("Trống", "Tất cả loại phòng", "Đã dọn dẹp");
+            if (request == null)
+            {
+                return BadRequest(new { success = false, message = "Dữ liệu cập nhật không hợp lệ", data = false });
+            }
+
+            var response = await _repository.UpdateAsync(maDatPhong, request);
 
             if (!response.Success)
-                return BadRequest(new { success = false, message = response.Message, data = (IEnumerable<Room>)null });
+                return BadRequest(new { success = false, message = response.Message, data = false });
 
             return Ok(new
             {
@@ -130,26 +126,11 @@ namespace HotelManagement.Controllers
             });
         }
 
-        [HttpPut("{maDatPhong}")]
-        public async Task<IActionResult> Update(int maDatPhong, [FromBody] BookingUpdateRequest request)
-        {
-            if (request == null)
-            {
-                return BadRequest(ApiResponse<bool>.ErrorResponse("Dữ liệu cập nhật không hợp lệ"));
-            }
-
-            var response = await _repository.UpdateAsync(maDatPhong, request);
-
-            return response.Success
-                ? Ok(response)
-                : BadRequest(response);
-        }
-
-
         [HttpDelete("{maDatPhong}")]
         public async Task<IActionResult> Delete(int maDatPhong)
         {
             var response = await _repository.DeleteAsync(maDatPhong);
+            
             if (!response.Success)
                 return BadRequest(new { success = false, message = response.Message, data = false });
 
@@ -165,6 +146,7 @@ namespace HotelManagement.Controllers
         public async Task<IActionResult> GetById(int maDatPhong)
         {
             var response = await _repository.GetByIdAsync(maDatPhong);
+            
             if (!response.Success)
                 return NotFound(new { success = false, message = response.Message, data = (Booking)null });
 
@@ -185,6 +167,7 @@ namespace HotelManagement.Controllers
             [FromQuery] string? sortOrder = "ASC")
         {
             var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
+            
             if (!result.Success)
                 return BadRequest(new { success = false, message = result.Message, data = (IEnumerable<Booking>)null });
 
@@ -199,6 +182,7 @@ namespace HotelManagement.Controllers
             });
         }
 
+        // Endpoint cập nhật trạng thái tổng quát (sử dụng logic flow validation trong repository)
         [HttpPut("{maDatPhong}/status")]
         public async Task<IActionResult> UpdateStatus(int maDatPhong, [FromBody] UpdateStatusRequest request)
         {
@@ -206,6 +190,7 @@ namespace HotelManagement.Controllers
                 return BadRequest(new { success = false, message = "Trạng thái không hợp lệ", data = false });
 
             var response = await _repository.UpdateStatusAsync(maDatPhong, request.TrangThai);
+            
             if (!response.Success)
                 return BadRequest(new { success = false, message = response.Message, data = false });
 
