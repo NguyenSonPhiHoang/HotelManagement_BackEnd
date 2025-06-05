@@ -12,6 +12,8 @@ namespace HotelManagement.DataReader
     {
         private readonly string connectionString;
         private const int DefaultCommandTimeout = 30; // Timeout mặc định 30 giây
+        private SqlConnection _connection;
+        private SqlTransaction _transaction;
 
         // Constructor nhận IConfiguration để lấy connection string
         public DatabaseDapper(IConfiguration configuration)
@@ -25,6 +27,57 @@ namespace HotelManagement.DataReader
             {
                 throw; // Giữ nguyên stack trace
             }
+        }
+        // Bắt đầu transaction
+        public SqlTransaction BeginTransaction()
+        {
+            if (_connection == null)
+            {
+                _connection = new SqlConnection(connectionString);
+                _connection.Open();
+            }
+
+            if (_connection.State != ConnectionState.Open)
+            {
+                _connection.Open();
+            }
+
+            _transaction = _connection.BeginTransaction();
+            return _transaction;
+        }
+
+        // Bắt đầu transaction async
+        public async Task<SqlTransaction> BeginTransactionAsync()
+        {
+            if (_connection == null)
+            {
+                _connection = new SqlConnection(connectionString);
+                await _connection.OpenAsync();
+            }
+
+            if (_connection.State != ConnectionState.Open)
+            {
+                await _connection.OpenAsync();
+            }
+
+            _transaction = _connection.BeginTransaction();
+            return _transaction;
+        }
+
+        // Commit transaction
+        public void CommitTransaction()
+        {
+            _transaction?.Commit();
+            _transaction?.Dispose();
+            _transaction = null;
+        }
+
+        // Rollback transaction
+        public void RollbackTransaction()
+        {
+            _transaction?.Rollback();
+            _transaction?.Dispose();
+            _transaction = null;
         }
 
         // Truy vấn dữ liệu với stored procedure (sync)
@@ -167,5 +220,6 @@ namespace HotelManagement.DataReader
             await connection.OpenAsync();
             return await SqlMapper.QueryMultipleAsync(connection, sql, parameters, commandType: CommandType.StoredProcedure, commandTimeout: DefaultCommandTimeout);
         }
+
     }
 }

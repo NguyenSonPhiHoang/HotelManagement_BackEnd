@@ -13,8 +13,13 @@ namespace HotelManagement.Model
     {
         public string SoPhong { get; set; }
         public string TrangThai { get; set; }
-        public int LoaiPhong { get; set; } 
+        public int LoaiPhong { get; set; }
         public string TinhTrang { get; set; }
     }
-
+    public class RoomAvailabilityResult
+    {
+        public bool IsAvailable { get; set; }
+        public string Message { get; set; }
+        public Room RoomInfo { get; set; }
+    }
 }
