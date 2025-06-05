@@ -90,20 +90,7 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
-        [HttpPut("{maTaiKhoan}")]
-        public async Task<IActionResult> UpdateCustomerName(int maTaiKhoan, [FromBody] UpdateCustomerNameRequest request)
-        {
-            var response = await _customerRepository.UpdateCustomerNameAsync(maTaiKhoan, request.HoTenKhachHang);
-            if (!response.Success)
-                return StatusCode(400, new { success = false, message = response.Message, data = (bool?)null });
 
-            return StatusCode(200, new
-            {
-                success = response.Success,
-                message = response.Message,
-                data = response.Data
-            });
-        }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(string id)
         {
@@ -114,6 +101,36 @@ namespace HotelManagement.Controllers
             var response = await _customerRepository.DeleteAsync(id);
             if (!response.Success)
                 return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+        [HttpPut("update-name")]
+        public async Task<IActionResult> UpdateCustomerNameUnified([FromBody] UpdateCustomerNameUnifiedRequest request)
+        {
+            ApiResponse<bool> response;
+
+            if (request.MaTaiKhoan.HasValue)
+            {
+                // Trường hợp có tài khoản
+                response = await _customerRepository.UpdateCustomerNameAsync(request.MaTaiKhoan.Value, request.HoTenKhachHang);
+            }
+            else if (!string.IsNullOrEmpty(request.MaKhachHang))
+            {
+                // Trường hợp không có tài khoản, dùng MaKhachHang
+                response = await _customerRepository.UpdateCustomerNameByCustomerIdAsync(request.MaKhachHang, request.HoTenKhachHang);
+            }
+            else
+            {
+                return StatusCode(400, new { success = false, message = "Phải cung cấp MaTaiKhoan hoặc MaKhachHang", data = (bool?)null });
+            }
+
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (bool?)null });
 
             return StatusCode(200, new
             {

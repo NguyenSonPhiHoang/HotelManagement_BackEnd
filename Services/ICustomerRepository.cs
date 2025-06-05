@@ -1,4 +1,4 @@
-﻿using HotelManagement.DataReader;
+﻿﻿using HotelManagement.DataReader;
 using HotelManagement.Model;
 using System.Globalization;
 
@@ -11,13 +11,15 @@ namespace HotelManagement.Services
         Task<ApiResponse<Customer>> GetByIdAsync(string id);
         Task<ApiResponse<bool>> UpdateAsync(Customer customer);
         Task<ApiResponse<bool>> UpdateCustomerNameAsync(int maTaiKhoan, string hoTenKhachHang);
+        Task<ApiResponse<bool>> UpdateCustomerNameByCustomerIdAsync(string maKhachHang, string hoTenKhachHang);
+
         Task<ApiResponse<bool>> DeleteAsync(string id);
         Task<ApiResponse<bool>> IsEmailExistsAsync(string email);
         Task<ApiResponse<bool>> IsPhoneExistsAsync(string phone);
         Task<ApiResponse<bool>> AddPointsAsync(string customerId, int points);
         Task<ApiResponse<bool>> AccumulatePointsAsync(string maKhachHang, decimal thanhTien);
         Task<ApiResponse<decimal>> UsePointsAsync(string maKhachHang, int soDiemSuDung);
-        Task<ApiResponse<PointProgram>> GetPointProgramByIdAsync(string maCT); // Đã thêm
+        Task<ApiResponse<PointProgram>> GetPointProgramByIdAsync(string maCT);
     }
 
     public class CustomerRepository : ICustomerRepository
@@ -114,6 +116,42 @@ namespace HotelManagement.Services
                 Console.WriteLine($"Cập nhật họ tên khách hàng cho MaTaiKhoan: {maTaiKhoan}");
                 var rowsAffected = await _db.ExecuteAsync(
                     "UPDATE Customer SET HoTenKhachHang = @HoTenKhachHang WHERE MaTaiKhoan = @MaTaiKhoan",
+                    parameters);
+
+                if (rowsAffected <= 0)
+                {
+                    Console.WriteLine("Cập nhật họ tên thất bại: Không tìm thấy khách hàng");
+                    return ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng");
+                }
+
+                Console.WriteLine("Cập nhật họ tên thành công");
+                return ApiResponse<bool>.SuccessResponse(true, "Cập nhật họ tên thành công");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi cập nhật họ tên: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi cập nhật họ tên: {ex.Message}");
+            }
+        }
+        public async Task<ApiResponse<bool>> UpdateCustomerNameByCustomerIdAsync(string maKhachHang, string hoTenKhachHang)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(hoTenKhachHang))
+                {
+                    Console.WriteLine("Họ tên khách hàng không hợp lệ");
+                    return ApiResponse<bool>.ErrorResponse("Họ tên khách hàng không hợp lệ");
+                }
+
+                var parameters = new
+                {
+                    MaKhachHang = maKhachHang,
+                    HoTenKhachHang = hoTenKhachHang
+                };
+
+                Console.WriteLine($"Cập nhật họ tên khách hàng cho MaKhachHang: {maKhachHang}");
+                var rowsAffected = await _db.ExecuteAsync(
+                    "UPDATE Customer SET HoTenKhachHang = @HoTenKhachHang WHERE MaKhachHang = @MaKhachHang",
                     parameters);
 
                 if (rowsAffected <= 0)
