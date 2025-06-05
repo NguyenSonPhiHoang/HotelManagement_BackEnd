@@ -9,6 +9,8 @@ namespace HotelManagement.Services
         Task<(ApiResponse<IEnumerable<Customer>> Items, int TotalCount)> GetAllAsync(
             int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaKhachHang", string? sortOrder = "ASC");
         Task<ApiResponse<Customer>> GetByIdAsync(string id);
+        Task<ApiResponse<Customer>> CreateAsync(AddCustomer addCustomer);
+
         Task<ApiResponse<bool>> UpdateAsync(Customer customer);
         Task<ApiResponse<bool>> UpdateCustomerNameAsync(int maTaiKhoan, string hoTenKhachHang);
         Task<ApiResponse<bool>> UpdateCustomerNameByCustomerIdAsync(string maKhachHang, string hoTenKhachHang);
@@ -56,7 +58,65 @@ namespace HotelManagement.Services
                 return (ApiResponse<IEnumerable<Customer>>.ErrorResponse($"Lỗi khi lấy danh sách khách hàng: {ex.Message}"), 0);
             }
         }
+        public async Task<ApiResponse<Customer>> CreateAsync(AddCustomer addCustomer)
+        {
+            try
+            {
+                // Validate input
+                if (string.IsNullOrWhiteSpace(addCustomer.HoTenKhachHang))
+                    return ApiResponse<Customer>.ErrorResponse("Họ tên khách hàng không được để trống");
 
+                if (string.IsNullOrWhiteSpace(addCustomer.Email))
+                    return ApiResponse<Customer>.ErrorResponse("Email không được để trống");
+
+                if (string.IsNullOrWhiteSpace(addCustomer.DienThoai))
+                    return ApiResponse<Customer>.ErrorResponse("Số điện thoại không được để trống");
+
+                // Kiểm tra email đã tồn tại
+                var emailExists = await IsEmailExistsAsync(addCustomer.Email);
+                if (emailExists.Success && emailExists.Data)
+                    return ApiResponse<Customer>.ErrorResponse("Email đã tồn tại trong hệ thống");
+
+                // Kiểm tra số điện thoại đã tồn tại
+                var phoneExists = await IsPhoneExistsAsync(addCustomer.DienThoai);
+                if (phoneExists.Success && phoneExists.Data)
+                    return ApiResponse<Customer>.ErrorResponse("Số điện thoại đã tồn tại trong hệ thống");
+
+                // Kiểm tra chương trình điểm nếu có
+                if (!string.IsNullOrWhiteSpace(addCustomer.MaCT))
+                {
+                    var pointProgram = await GetPointProgramByIdAsync(addCustomer.MaCT);
+                    if (!pointProgram.Success)
+                        return ApiResponse<Customer>.ErrorResponse("Chương trình điểm không tồn tại");
+                }
+
+                // Thực hiện insert vào database (MaKhachHang sẽ tự động tăng)
+                var parameters = new
+                {
+                    HoTenKhachHang = addCustomer.HoTenKhachHang,
+                    Email = addCustomer.Email,
+                    DienThoai = addCustomer.DienThoai,
+                    TongDiem = 0, // Mặc định 0 điểm
+                    MaCT = addCustomer.MaCT ?? ""
+                };
+
+                // Sử dụng stored procedure trả về MaKhachHang vừa tạo
+                var newCustomerId = await _db.QueryFirstOrDefaultStoredProcedureAsync<string>("sp_Customer_Create", parameters);
+                if (string.IsNullOrEmpty(newCustomerId))
+                    return ApiResponse<Customer>.ErrorResponse("Tạo khách hàng thất bại");
+
+                // Lấy thông tin khách hàng vừa tạo để trả về
+                var createdCustomer = await GetByIdAsync(newCustomerId);
+                if (!createdCustomer.Success)
+                    return ApiResponse<Customer>.ErrorResponse("Tạo khách hàng thành công nhưng không thể lấy thông tin");
+
+                return ApiResponse<Customer>.SuccessResponse(createdCustomer.Data, "Tạo khách hàng thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<Customer>.ErrorResponse($"Lỗi khi tạo khách hàng: {ex.Message}");
+            }
+        }
         public async Task<ApiResponse<Customer>> GetByIdAsync(string id)
         {
             try
