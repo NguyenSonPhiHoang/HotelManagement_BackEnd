@@ -39,7 +39,30 @@ namespace HotelManagement.Controllers
                 pageSize
             });
         }
+        [HttpPost]
+        public async Task<IActionResult> CreateCustomer([FromBody] AddCustomer addCustomer)
+        {
+            if (!ModelState.IsValid)
+            {
+                return StatusCode(400, new
+                {
+                    success = false,
+                    message = "Dữ liệu không hợp lệ",
+                    data = (Customer)null
+                });
+            }
 
+            var response = await _customerRepository.CreateAsync(addCustomer);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (Customer)null });
+
+            return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCustomerById(string id)
         {
