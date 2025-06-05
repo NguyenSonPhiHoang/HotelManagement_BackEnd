@@ -10,16 +10,20 @@ namespace HotelManagement.Services
     public interface IBookingRepository
     {
         Task<ApiResponse<int>> CreateAsync(Booking booking);
-        Task<ApiResponse<bool>> UpdateAsync(int maDatPhong,BookingUpdateRequest BookingUpdateRequest);
+        Task<ApiResponse<bool>> UpdateAsync(int maDatPhong, BookingUpdateRequest BookingUpdateRequest);
         Task<ApiResponse<bool>> DeleteAsync(int maDatPhong);
         Task<ApiResponse<Booking>> GetByIdAsync(int maDatPhong);
         Task<(ApiResponse<IEnumerable<Booking>> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaDatPhong", string? sortOrder = "ASC");
         Task<ApiResponse<bool>> UpdateStatusAsync(int maDatPhong, string trangThai);
+        Task<ApiResponse<bool>> CompleteOrCancelBookingAsync(int maDatPhong, string action);
+        Task<bool> UpdateRoomStatusInTransaction(int maPhong, string trangThai, string? tinhTrang = null);
     }
 
     public class BookingRepository : IBookingRepository
     {
         private readonly DatabaseDapper _db;
+        private readonly IRoomRepository _roomRepository;
+
 
         public BookingRepository(DatabaseDapper db)
         {
@@ -36,7 +40,7 @@ namespace HotelManagement.Services
                     return ApiResponse<int>.ErrorResponse("Dữ liệu đặt phòng không hợp lệ");
                 }
 
-                // Kiểm tra LoaiTinhTien không phân biệt hoa thường và loại bỏ khoảng trắng
+                // Kiểm tra LoaiTinhTien
                 if (string.IsNullOrWhiteSpace(booking.LoaiTinhTien) ||
                     !new[] { "Hourly", "Nightly" }.Contains(booking.LoaiTinhTien.Trim(), StringComparer.OrdinalIgnoreCase))
                 {
@@ -44,45 +48,77 @@ namespace HotelManagement.Services
                     return ApiResponse<int>.ErrorResponse("Loại tính tiền không hợp lệ");
                 }
 
-                // Lấy giá phòng
-                var room = await _db.QueryFirstOrDefaultAsync<dynamic>(
-                    "SELECT GiaPhong FROM Room WHERE MaPhong = @MaPhong",
-                    new { MaPhong = booking.MaPhong });
-
-                if (room == null)
+                // *** BƯỚC MỚI: Kiểm tra phòng có thể đặt được không ***
+                var availabilityCheck = await _roomRepository.CheckRoomAvailabilityAsync(booking.MaPhong);
+                if (!availabilityCheck.Success)
                 {
-                    Console.WriteLine($"Phòng không tồn tại: MaPhong = {booking.MaPhong}");
-                    return ApiResponse<int>.ErrorResponse("Phòng không tồn tại");
+                    Console.WriteLine($"Lỗi kiểm tra phòng: {availabilityCheck.Message}");
+                    return ApiResponse<int>.ErrorResponse(availabilityCheck.Message);
                 }
 
+                if (!availabilityCheck.Data.IsAvailable)
+                {
+                    Console.WriteLine($"Phòng không thể đặt: {availabilityCheck.Data.Message}");
+                    return ApiResponse<int>.ErrorResponse(availabilityCheck.Data.Message);
+                }
+
+                // Lấy giá phòng từ thông tin phòng đã kiểm tra
+                var room = availabilityCheck.Data.RoomInfo;
 
                 // Tính tổng tiền
                 decimal tongTien = CalculateTotalPrice(booking, room.GiaPhong, booking.LoaiTinhTien);
                 booking.TongTien = tongTien;
                 booking.TrangThai = "Pending";
 
-                var parameters = new
+                // *** SỬ DỤNG TRANSACTION để đảm bảo tính nhất quán ***
+                var transaction = await _db.BeginTransactionAsync();
+                try
                 {
-                    booking.MaKhachHang,
-                    booking.MaPhong,
-                    booking.GioCheckIn,
-                    booking.GioCheckOut,
-                    booking.TrangThai,
-                    booking.NgayDat,
-                    booking.TongTien,
-                    booking.LoaiTinhTien
-                };
+                    // Tạo booking
+                    var parameters = new
+                    {
+                        booking.MaKhachHang,
+                        booking.MaPhong,
+                        booking.GioCheckIn,
+                        booking.GioCheckOut,
+                        booking.TrangThai,
+                        booking.NgayDat,
+                        booking.TongTien,
+                        booking.LoaiTinhTien
+                    };
 
-                Console.WriteLine($"Gọi sp_Booking_Create với MaKhachHang: {booking.MaKhachHang}, MaPhong: {booking.MaPhong}, TongTien: {tongTien}");
-                var maDatPhong = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>("sp_Booking_Create", parameters);
-                if (maDatPhong <= 0)
-                {
-                    Console.WriteLine("Tạo đặt phòng thất bại");
-                    return ApiResponse<int>.ErrorResponse("Tạo đặt phòng thất bại");
+                    Console.WriteLine($"Tạo booking với MaPhong: {booking.MaPhong}");
+                    var maDatPhong = await _db.QueryFirstOrDefaultStoredProcedureAsync<int>(
+                        "sp_Booking_Create", parameters);
+
+                    if (maDatPhong <= 0)
+                    {
+                        _db.RollbackTransaction();
+                        Console.WriteLine("Tạo đặt phòng thất bại");
+                        return ApiResponse<int>.ErrorResponse("Tạo đặt phòng thất bại");
+                    }
+
+                    // Cập nhật trạng thái phòng thành "Đã đặt"
+                    var updateRoomResult = await UpdateRoomStatusInTransaction(
+                        booking.MaPhong, "Đã đặt", null);
+
+                    if (!updateRoomResult)
+                    {
+                        _db.RollbackTransaction();
+                        Console.WriteLine("Cập nhật trạng thái phòng thất bại");
+                        return ApiResponse<int>.ErrorResponse("Cập nhật trạng thái phòng thất bại");
+                    }
+
+                    _db.CommitTransaction();
+
+                    Console.WriteLine($"Đặt phòng thành công: MaDatPhong = {maDatPhong}, Phòng {room.SoPhong} đã chuyển sang trạng thái 'Đã đặt'");
+                    return ApiResponse<int>.SuccessResponse(maDatPhong, "Đặt phòng thành công");
                 }
-
-                Console.WriteLine($"Tạo đặt phòng thành công: MaDatPhong = {maDatPhong}");
-                return ApiResponse<int>.SuccessResponse(maDatPhong, "Tạo đặt phòng thành công");
+                catch (Exception ex)
+                {
+                    _db.RollbackTransaction();
+                    throw;
+                }
             }
             catch (Exception ex)
             {
@@ -91,6 +127,78 @@ namespace HotelManagement.Services
             }
         }
 
+        // Method để cập nhật trạng thái phòng trong transaction
+        public async Task<bool> UpdateRoomStatusInTransaction(int maPhong, string trangThai, string? tinhTrang)
+        {
+            try
+            {
+                var parameters = new
+                {
+                    MaPhong = maPhong,
+                    TrangThai = trangThai,
+                    TinhTrang = tinhTrang
+                };
+
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Room_UpdateStatus", parameters);
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi cập nhật trạng thái phòng: {ex.Message}");
+                return false;
+            }
+        }
+
+        // Method để xử lý khi thanh toán hoặc hủy booking
+        public async Task<ApiResponse<bool>> CompleteOrCancelBookingAsync(int maDatPhong, string action)
+        {
+            try
+            {
+                // Lấy thông tin booking
+                var booking = await _db.QueryFirstOrDefaultStoredProcedureAsync<Booking>(
+                    "sp_Booking_GetById", new { MaDatPhong = maDatPhong });
+
+                if (booking == null)
+                {
+                    return ApiResponse<bool>.ErrorResponse("Không tìm thấy đặt phòng");
+                }
+
+                var transaction = await _db.BeginTransactionAsync();
+                try
+                {
+                    // Cập nhật trạng thái booking
+                    string newBookingStatus = action == "complete" ? "Completed" : "Cancelled";
+                    await _db.ExecuteStoredProcedureAsync("sp_Booking_UpdateStatus",
+                        new { MaDatPhong = maDatPhong, TrangThai = newBookingStatus });
+
+                    // Cập nhật trạng thái phòng về "Trống" và "Chưa dọn dẹp"
+                    var updateRoomResult = await UpdateRoomStatusInTransaction(
+                        booking.MaPhong, "Trống", "Chưa dọn dẹp");
+
+                    if (!updateRoomResult)
+                    {
+                        _db.RollbackTransaction();
+                        return ApiResponse<bool>.ErrorResponse("Cập nhật trạng thái phòng thất bại");
+                    }
+
+                    _db.CommitTransaction();
+
+                    string actionText = action == "complete" ? "hoàn thành" : "hủy";
+                    Console.WriteLine($"Đã {actionText} booking {maDatPhong}, phòng {booking.MaPhong} về trạng thái 'Trống - Chưa dọn dẹp'");
+                    return ApiResponse<bool>.SuccessResponse(true, $"Đã {actionText} đặt phòng thành công");
+                }
+                catch (Exception ex)
+                {
+                    _db.RollbackTransaction();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi {action} booking: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi xử lý đặt phòng: {ex.Message}");
+            }
+        }
         private decimal CalculateTotalPrice(Booking booking, decimal giaPhong, string loaiTinhTien)
         {
             double hours = (booking.GioCheckOut - booking.GioCheckIn).TotalHours;

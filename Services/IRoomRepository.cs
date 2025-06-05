@@ -18,6 +18,9 @@ namespace HotelManagement.Services
         Task<ApiResponse<int>> CreateAsync(CreateRequestRoom room);
         Task<ApiResponse<bool>> UpdateAsync(Room room);
         Task<ApiResponse<bool>> DeleteAsync(int maPhong);
+        Task<ApiResponse<bool>> UpdateRoomStatusAsync(int maPhong, string trangThai, string? tinhTrang = null);
+        Task<ApiResponse<RoomAvailabilityResult>> CheckRoomAvailabilityAsync(int maPhong);
+
     }
 
     public class RoomRepository : IRoomRepository
@@ -186,6 +189,88 @@ namespace HotelManagement.Services
             catch (Exception ex)
             {
                 return ApiResponse<bool>.ErrorResponse($"Lỗi khi xóa phòng: {ex.Message}");
+            }
+        }
+        public async Task<ApiResponse<RoomAvailabilityResult>> CheckRoomAvailabilityAsync(int maPhong)
+        {
+            try
+            {
+                var room = await _db.QueryFirstOrDefaultStoredProcedureAsync<Room>("sp_Room_GetById", new { MaPhong = maPhong });
+
+                if (room == null)
+                {
+                    return ApiResponse<RoomAvailabilityResult>.ErrorResponse("Phòng không tồn tại");
+                }
+
+                var result = new RoomAvailabilityResult
+                {
+                    RoomInfo = room,
+                    IsAvailable = false,
+                    Message = ""
+                };
+
+                // Kiểm tra trạng thái phòng
+                switch (room.TrangThai?.Trim().ToLower())
+                {
+                    case "trống":
+                        // Kiểm tra tình trạng phòng
+                        switch (room.TinhTrang?.Trim().ToLower())
+                        {
+                            case "đã dọn dẹp":
+                                result.IsAvailable = true;
+                                result.Message = "Phòng có thể đặt được";
+                                break;
+                            case "chưa dọn dẹp":
+                                result.Message = "Phòng chưa dọn dẹp";
+                                break;
+                            case "sửa chữa":
+                                result.Message = "Phòng đang sửa chữa";
+                                break;
+                            default:
+                                result.Message = "Tình trạng phòng không xác định";
+                                break;
+                        }
+                        break;
+                    case "đã đặt":
+                        result.Message = "Phòng đã được đặt";
+                        break;
+                    case "đang thuê":
+                        result.Message = "Phòng đang được thuê";
+                        break;
+                    default:
+                        result.Message = "Trạng thái phòng không xác định";
+                        break;
+                }
+
+                return ApiResponse<RoomAvailabilityResult>.SuccessResponse(result, result.Message);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<RoomAvailabilityResult>.ErrorResponse($"Lỗi khi kiểm tra phòng: {ex.Message}");
+            }
+        }
+
+        // Method mới: Cập nhật trạng thái phòng
+        public async Task<ApiResponse<bool>> UpdateRoomStatusAsync(int maPhong, string trangThai, string? tinhTrang = null)
+        {
+            try
+            {
+                var parameters = new
+                {
+                    MaPhong = maPhong,
+                    TrangThai = trangThai,
+                    TinhTrang = tinhTrang
+                };
+
+                var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_Room_UpdateStatus", parameters);
+                if (rowsAffected <= 0)
+                    return ApiResponse<bool>.ErrorResponse("Cập nhật trạng thái phòng thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Cập nhật trạng thái phòng thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi cập nhật trạng thái phòng: {ex.Message}");
             }
         }
     }
