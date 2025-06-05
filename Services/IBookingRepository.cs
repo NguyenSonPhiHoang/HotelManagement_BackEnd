@@ -71,7 +71,6 @@
                     booking.TongTien = tongTien;
                     booking.TrangThai = "Pending"; // Trạng thái mặc định
 
-                    // Tạo booking với trạng thái Pending (KHÔNG cập nhật trạng thái phòng)
                     var parameters = new
                     {
                         booking.MaKhachHang,
