@@ -11,6 +11,8 @@ namespace HotelManagement.Model
         public string TrangThai { get; set; } = null!;
         public string? HoTenKhachHang { get; set; }
         public string? SoPhong { get; set; }
+        public DateTime NgayTaoHoaDon { get; set; }
+
     }
     public class InvoiceCreateRequest
     {

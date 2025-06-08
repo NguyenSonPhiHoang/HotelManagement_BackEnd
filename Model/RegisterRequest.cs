@@ -29,24 +29,31 @@ namespace HotelManagement.Model
         public int MaVaiTro { get; set; } = 4; // Mặc định là Customer
 
     }
-      public class OtpVerificationRequest
-        {
-            public int MaTaiKhoan { get; set; }
-            public string OtpCode { get; set; } = null!;
-        }
+    public class OtpVerificationRequest
+    {
+        [Required(ErrorMessage = "Email là bắt buộc")]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
+        public string Email { get; set; }
 
-        public class OtpResendRequest
-        {
-            public int MaTaiKhoan { get; set; }
-            public string Email { get; set; } = null!;
-        }
+        [Required(ErrorMessage = "Mã OTP là bắt buộc")]
+        [StringLength(6, MinimumLength = 4, ErrorMessage = "Mã OTP phải từ 4-6 ký tự")]
+        public string OtpCode { get; set; }
 
-        public class OtpVerification
-        {
-            public int MaTaiKhoan { get; set; }
-            public string OtpCode { get; set; } = null!;
-            public string Email { get; set; } = null!;
-            public DateTime CreatedAt { get; set; }
-            public DateTime ExpiresAt { get; set; }
-        }
+        // Thêm các property khác nếu cần
+    }
+
+    public class OtpResendRequest
+    {
+        public int MaTaiKhoan { get; set; }
+        public string Email { get; set; } = null!;
+    }
+
+    public class OtpVerification
+    {
+        public int MaTaiKhoan { get; set; }
+        public string OtpCode { get; set; } = null!;
+        public string Email { get; set; } = null!;
+        public DateTime CreatedAt { get; set; }
+        public DateTime ExpiresAt { get; set; }
+    }
 }

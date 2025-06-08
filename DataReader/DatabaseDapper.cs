@@ -28,6 +28,7 @@ namespace HotelManagement.DataReader
                 throw; // Giữ nguyên stack trace
             }
         }
+        
         // Bắt đầu transaction
         public SqlTransaction BeginTransaction()
         {
@@ -165,6 +166,7 @@ namespace HotelManagement.DataReader
             );
             return result;
         }
+        
         // Thực thi câu lệnh SQL không truy vấn (sync)
         public int Execute(string sql, object parameters = null)
         {
@@ -179,6 +181,42 @@ namespace HotelManagement.DataReader
             using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
             return await connection.ExecuteAsync(sql, parameters, commandTimeout: DefaultCommandTimeout);
+        }
+
+        // ← THÊM MỚI: Thực thi câu lệnh SQL với transaction (sync)
+        public int Execute(string sql, object parameters, SqlTransaction transaction)
+        {
+            return _connection.Execute(sql, parameters, transaction, commandTimeout: DefaultCommandTimeout);
+        }
+
+        // ← THÊM MỚI: Thực thi câu lệnh SQL với transaction (async)
+        public async Task<int> ExecuteAsync(string sql, object parameters, SqlTransaction transaction)
+        {
+            return await _connection.ExecuteAsync(sql, parameters, transaction, commandTimeout: DefaultCommandTimeout);
+        }
+
+        // ← THÊM MỚI: Query với transaction (sync)
+        public IEnumerable<T> Query<T>(string sql, object parameters, SqlTransaction transaction)
+        {
+            return _connection.Query<T>(sql, parameters, transaction, commandTimeout: DefaultCommandTimeout);
+        }
+
+        // ← THÊM MỚI: Query với transaction (async)
+        public async Task<IEnumerable<T>> QueryAsync<T>(string sql, object parameters, SqlTransaction transaction)
+        {
+            return await _connection.QueryAsync<T>(sql, parameters, transaction, commandTimeout: DefaultCommandTimeout);
+        }
+
+        // ← THÊM MỚI: QueryFirstOrDefault với transaction (sync)
+        public T QueryFirstOrDefault<T>(string sql, object parameters, SqlTransaction transaction)
+        {
+            return _connection.QueryFirstOrDefault<T>(sql, parameters, transaction, commandTimeout: DefaultCommandTimeout);
+        }
+
+        // ← THÊM MỚI: QueryFirstOrDefault với transaction (async)
+        public async Task<T> QueryFirstOrDefaultAsync<T>(string sql, object parameters, SqlTransaction transaction)
+        {
+            return await _connection.QueryFirstOrDefaultAsync<T>(sql, parameters, transaction, commandTimeout: DefaultCommandTimeout);
         }
 
         // Thực thi câu lệnh SQL và trả về giá trị vô hướng (sync)
@@ -221,5 +259,11 @@ namespace HotelManagement.DataReader
             return await SqlMapper.QueryMultipleAsync(connection, sql, parameters, commandType: CommandType.StoredProcedure, commandTimeout: DefaultCommandTimeout);
         }
 
+        // ← THÊM MỚI: Dispose method để dọn dẹp resources
+        public void Dispose()
+        {
+            _transaction?.Dispose();
+            _connection?.Dispose();
+        }
     }
 }

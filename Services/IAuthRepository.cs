@@ -55,8 +55,9 @@ namespace HotelManagement.Services
                 }
 
                 Console.WriteLine($"Đang tìm tài khoản với TenTaiKhoan: {request.TenTaiKhoan}");
+
                 // Sử dụng SP thay vì truy vấn trực tiếp
-                var account = await _db.QueryFirstOrDefaultStoredProcedureAsync<dynamic>(
+                var account = await _db.QueryFirstOrDefaultStoredProcedureAsync<AccountModel>(
                     "sp_Login",
                     new { TenTaiKhoan = request.TenTaiKhoan });
 
@@ -67,24 +68,26 @@ namespace HotelManagement.Services
                 }
 
                 Console.WriteLine($"Tài khoản tìm thấy: MaTaiKhoan = {account.MaTaiKhoan}, Hash lưu: {account.MatKhau}");
+
+                // Kiểm tra mật khẩu
                 if (!PasswordHasher.VerifyPassword(request.MatKhau, account.MatKhau))
                 {
                     Console.WriteLine($"Xác minh mật khẩu thất bại cho TenTaiKhoan: {request.TenTaiKhoan}");
                     return ApiResponse<TokenResponse>.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng");
                 }
+                Console.WriteLine($"Tài khoản: {account.TenTaiKhoan}, MaTaiKhoan: {account.MaTaiKhoan}");
+                Console.WriteLine($"IsActivated: {account.IsActivated} (Kiểu: {account.IsActivated.GetType()})");
+                // ← THAY ĐỔI CHÍNH: Kiểm tra IsActivated thay vì OTP
+                Console.WriteLine($"Kiểm tra trạng thái kích hoạt cho MaTaiKhoan: {account.MaTaiKhoan}");
 
-                Console.WriteLine($"Kiểm tra OTP cho MaTaiKhoan: {account.MaTaiKhoan}");
-                // Sử dụng EXISTS thay vì trả về boolean
-                var otpCount = await _db.QueryFirstOrDefaultAsync<int>(
-                    "SELECT COUNT(1) FROM OtpVerification WHERE MaTaiKhoan = @MaTaiKhoan",
-                    new { MaTaiKhoan = account.MaTaiKhoan });
-
-                if (otpCount > 0)
+                // Kiểm tra tài khoản đã được kích hoạt chưa
+                if (!account.IsActivated)
                 {
-                    Console.WriteLine($"Tài khoản chưa xác minh OTP: MaTaiKhoan = {account.MaTaiKhoan}");
-                    return ApiResponse<TokenResponse>.ErrorResponse("Tài khoản chưa được kích hoạt. Vui lòng xác minh OTP.");
+                    Console.WriteLine($"Tài khoản chưa được kích hoạt: MaTaiKhoan = {account.MaTaiKhoan}");
+                    return ApiResponse<TokenResponse>.ErrorResponse("Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để xác thực OTP");
                 }
 
+                // Tạo token response
                 var user = new TokenResponse
                 {
                     MaTaiKhoan = account.MaTaiKhoan,
@@ -123,8 +126,8 @@ namespace HotelManagement.Services
                     if (tokenExists == 0)
                     {
                         await _db.ExecuteAsync(@"
-            INSERT INTO UserToken (MaTaiKhoan, AccessToken, RefreshToken, NgayHetHan) 
-            VALUES (@MaTaiKhoan, @AccessToken, @RefreshToken, @NgayHetHan)",
+                    INSERT INTO UserToken (MaTaiKhoan, AccessToken, RefreshToken, NgayHetHan) 
+                    VALUES (@MaTaiKhoan, @AccessToken, @RefreshToken, @NgayHetHan)",
                             new
                             {
                                 MaTaiKhoan = user.MaTaiKhoan,
@@ -186,8 +189,6 @@ namespace HotelManagement.Services
             Console.WriteLine($"Tạo JWT token thành công cho MaTaiKhoan: {user.MaTaiKhoan}");
             return tokenString;
         }
-
-        // Phần còn lại của RegisterAsync và ValidateRegisterRequest giữ nguyên
         public async Task<ApiResponse<int>> RegisterAsync(RegisterRequest request)
         {
             if (!ValidateRegisterRequest(request, out string errorMessage))
@@ -224,6 +225,7 @@ namespace HotelManagement.Services
 
                 Console.WriteLine($"Gọi sp_Account_InsertWithTempStatus với TenTaiKhoan: {request.TenTaiKhoan}");
                 var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<dynamic>("sp_Account_InsertWithTempStatus", parameters);
+
                 if (result != null && result.MaTaiKhoan > 0)
                 {
                     // Tạo OTP
@@ -242,10 +244,14 @@ namespace HotelManagement.Services
                     });
 
                     // Gửi OTP qua email
-                    await _emailService.SendEmailAsync(request.Email, "Xác minh OTP", $"Mã OTP của bạn là: {otpCode}. Mã sẽ hết hiệu lực sớm. Vui lòng nhập mã nay để kích hoạt tài khoản của bạn.");
+                    await _emailService.SendEmailAsync(request.Email, "Xác minh OTP",
+                        $"Mã OTP của bạn là: {otpCode}. Mã sẽ hết hiệu lực sau 2 phút. Vui lòng nhập mã này để kích hoạt tài khoản của bạn.");
 
                     Console.WriteLine($"Đăng ký thành công: MaTaiKhoan = {result.MaTaiKhoan}, OTP gửi tới {request.Email}");
-                    return ApiResponse<int>.SuccessResponse((int)result.MaTaiKhoan, "Đăng ký thành công, vui lòng kiểm tra email để lấy OTP");
+
+                    // ← THAY ĐỔI: Không trả về MaTaiKhoan, chỉ thông báo thành công
+                    return ApiResponse<int>.SuccessResponse(0,
+                        $"Đăng ký thành công! Vui lòng kiểm tra email {request.Email} để lấy mã OTP");
                 }
 
                 Console.WriteLine("Đăng ký thất bại");
@@ -257,13 +263,17 @@ namespace HotelManagement.Services
                 return ApiResponse<int>.ErrorResponse($"Lỗi khi đăng ký: {ex.Message}");
             }
         }
+
         public async Task<ApiResponse<bool>> VerifyOtpAsync(OtpVerificationRequest request)
         {
             try
             {
-                var otp = await _db.QueryFirstOrDefaultStoredProcedureAsync<OtpVerification>("sp_OtpVerification_GetByAccountId", new { request.MaTaiKhoan });
+                // Sử dụng stored procedure mới với Email
+                var otp = await _db.QueryFirstOrDefaultStoredProcedureAsync<dynamic>(
+                    "sp_OtpVerification_GetByEmail", new { request.Email });
+
                 if (otp == null)
-                    return ApiResponse<bool>.ErrorResponse("Không tìm thấy OTP");
+                    return ApiResponse<bool>.ErrorResponse("Không tìm thấy OTP cho email này");
 
                 if (otp.ExpiresAt < DateTime.UtcNow)
                     return ApiResponse<bool>.ErrorResponse("Mã OTP đã hết hạn");
@@ -271,12 +281,32 @@ namespace HotelManagement.Services
                 if (otp.OtpCode != request.OtpCode)
                     return ApiResponse<bool>.ErrorResponse("Mã OTP không đúng");
 
-                // Xóa OTP để đánh dấu tài khoản đã kích hoạt
-                var rowsAffected = await _db.ExecuteAsync("DELETE FROM OtpVerification WHERE MaTaiKhoan = @MaTaiKhoan", new { request.MaTaiKhoan });
-                if (rowsAffected <= 0)
-                    return ApiResponse<bool>.ErrorResponse("Xác minh OTP thất bại");
+                // Kích hoạt tài khoản và xóa OTP trong transaction
+                var transaction = _db.BeginTransaction();
+                try
+                {
+                    // Kích hoạt tài khoản
+                    await _db.ExecuteAsync(
+                        "UPDATE Account SET IsActivated = 1 WHERE MaTaiKhoan = @MaTaiKhoan",
+                        new { MaTaiKhoan = otp.MaTaiKhoan }, transaction);
 
-                return ApiResponse<bool>.SuccessResponse(true, "Xác minh OTP thành công");
+                    // Xóa OTP
+                    await _db.ExecuteAsync(
+                        "DELETE FROM OtpVerification WHERE MaTaiKhoan = @MaTaiKhoan",
+                        new { MaTaiKhoan = otp.MaTaiKhoan }, transaction);
+
+                    _db.CommitTransaction();
+                    return ApiResponse<bool>.SuccessResponse(true, "Xác minh OTP thành công! Tài khoản đã được kích hoạt");
+                }
+                catch
+                {
+                    _db.RollbackTransaction();
+                    throw;
+                }
+                finally
+                {
+                    _db.Dispose(); // Dọn dẹp connection và transaction
+                }
             }
             catch (Exception ex)
             {
