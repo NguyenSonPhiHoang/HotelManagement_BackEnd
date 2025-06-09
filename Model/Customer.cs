@@ -9,6 +9,7 @@
         public int TongDiem { get; set; }
         public string MaCT { get; set; } // Mã Chương Trình (Point Program)
         public string TenCT { get; set; } // Tên Chương Trình
+        public int DiemKhaDung { get; set; } // Điểm Khả Dụng
     }
 
     public class AddCustomer
