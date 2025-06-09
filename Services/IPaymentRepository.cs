@@ -15,7 +15,6 @@ namespace HotelManagement.Services
         Task<ApiResponse<Payment>> GetByIdAsync(int maThanhToan);
         Task<(ApiResponse<IEnumerable<Payment>> Items, int TotalCount)> GetAllAsync(
             int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaThanhToan", string? sortOrder = "ASC");
-        Task<ApiResponse<(int MaThanhToan, decimal SoTienGiam, int DiemTichLuy)>> ProcessPaymentAndPointsAsync(string maKhachHang, decimal thanhTien, int soDiemSuDung);
     }
 
     public class PaymentRepository : IPaymentRepository
@@ -134,32 +133,6 @@ namespace HotelManagement.Services
                 return (ApiResponse<IEnumerable<Payment>>.ErrorResponse($"Lỗi khi lấy danh sách thanh toán: {ex.Message}"), 0);
             }
         }
-        public async Task<ApiResponse<(int MaThanhToan, decimal SoTienGiam, int DiemTichLuy)>> ProcessPaymentAndPointsAsync(string maKhachHang, decimal thanhTien, int soDiemSuDung)
-        {
-            try
-            {
-                if (!int.TryParse(maKhachHang, out int maKhachHangInt))
-                    return ApiResponse<(int, decimal, int)>.ErrorResponse("Mã khách hàng không hợp lệ");
-
-                if (thanhTien < 0 || soDiemSuDung < 0)
-                    return ApiResponse<(int, decimal, int)>.ErrorResponse("Số tiền hoặc điểm sử dụng không hợp lệ");
-
-                var parameters = new
-                {
-                    MaKhachHang = maKhachHangInt,
-                    ThanhTien = thanhTien,
-                    SoDiemSuDung = soDiemSuDung
-                };
-
-                var result = await _db.QueryFirstOrDefaultStoredProcedureAsync<(int MaThanhToan, decimal SoTienGiam, int DiemTichLuy)>(
-                    "sp_ThanhToanVaTichDiem", parameters);
-
-                return ApiResponse<(int, decimal, int)>.SuccessResponse(result, "Thanh toán và tích điểm thành công");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<(int, decimal, int)>.ErrorResponse($"Lỗi khi xử lý thanh toán và điểm: {ex.Message}");
-            }
-        }
+       
     }
 }
