@@ -305,12 +305,9 @@ namespace HotelManagement.Services
                     _db.RollbackTransaction();
                     throw;
                 }
-                finally
-                {
-                    _db.Dispose(); // Dọn dẹp connection và transaction
-                }
+
             }
-            catch (Exception ex)
+            catch (Exception ex) 
             {
                 return ApiResponse<bool>.ErrorResponse($"Lỗi khi xác minh OTP: {ex.Message}");
             }
