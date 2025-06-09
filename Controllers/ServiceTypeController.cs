@@ -20,7 +20,7 @@ namespace HotelManagement.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllServiceTypes(
             [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1,
-            [FromQuery, Range(1, 100)] int pageSize = 10,
+            [FromQuery, Range(1, int.MaxValue)] int pageSize = 10,
             [FromQuery] string? searchTerm = null,
             [FromQuery] string? sortBy = "MaLoaiDV",
             [FromQuery] string? sortOrder = "ASC")
