@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using HotelManagement.Model;
+﻿using HotelManagement.Model;
 using HotelManagement.Services;
-using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -9,107 +10,200 @@ namespace HotelManagement.Controllers
     [Route("api/customers")]
     public class CustomerController : ControllerBase
     {
-        private readonly ICustomerService _customerService;
+        private readonly ICustomerRepository _customerRepository;
 
-        public CustomerController(ICustomerService customerService)
+        public CustomerController(ICustomerRepository customerRepository)
         {
-            _customerService = customerService;
+            _customerRepository = customerRepository;
         }
 
         [HttpGet]
-        public ActionResult<ApiResponse<IEnumerable<Customer>>> GetAllCustomers()
+        public async Task<IActionResult> GetAllCustomers(
+            [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1,
+            [FromQuery, Range(1, 100)] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = "MaKhachHang",
+            [FromQuery] string? sortOrder = "ASC")
         {
-            var response = _customerService.GetAllCustomers();
-            return response.Success ? Ok(response) : StatusCode(500, response);
-        }
+            var (result, totalCount) = await _customerRepository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
+            if (!result.Success)
+                return StatusCode(500, new { success = false, message = result.Message, data = (IEnumerable<Customer>)null });
 
-        [HttpGet("{id}")]
-        public ActionResult<ApiResponse<Customer>> GetCustomerById(string id)
-        {
-            var response = _customerService.GetCustomerById(id);
-            return response.Success ? Ok(response) : NotFound(response);
+            return StatusCode(200, new
+            {
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
+            });
         }
-
         [HttpPost]
-        public ActionResult<ApiResponse<string>> CreateCustomer([FromBody] AddCustomer customer)
+        public async Task<IActionResult> CreateCustomer([FromBody] AddCustomer addCustomer)
         {
-            // Kiểm tra email và điện thoại đã tồn tại chưa
-            var emailExists = _customerService.IsEmailExists(customer.Email);
-            if (emailExists.Success && emailExists.Data)
-                return BadRequest(ApiResponse<string>.ErrorResponse("Email đã tồn tại"));
+            if (!ModelState.IsValid)
+            {
+                return StatusCode(400, new
+                {
+                    success = false,
+                    message = "Dữ liệu không hợp lệ",
+                    data = (Customer)null
+                });
+            }
 
-            var phoneExists = _customerService.IsPhoneExists(customer.DienThoai);
-            if (phoneExists.Success && phoneExists.Data)
-                return BadRequest(ApiResponse<string>.ErrorResponse("Số điện thoại đã tồn tại"));
+            var response = await _customerRepository.CreateAsync(addCustomer);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (Customer)null });
 
-            var response = _customerService.CreateCustomer(customer);
-            return response.Success ? Ok(response) : BadRequest(response);
+            return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetCustomerById(string id)
+        {
+            var response = await _customerRepository.GetByIdAsync(id);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (Customer)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{id}")]
-        public ActionResult<ApiResponse<bool>> UpdateCustomer(string id, [FromBody] Customer customer)
+        public async Task<IActionResult> UpdateCustomer(string id, [FromBody] Customer customer)
         {
             if (id != customer.MaKhachHang)
-            {
-                return BadRequest(ApiResponse<bool>.ErrorResponse("Mã khách hàng không khớp"));
-            }
-            var existingCustomer = _customerService.GetCustomerById(id);
+                return StatusCode(400, new { success = false, message = "Mã khách hàng không khớp", data = false });
+
+            var existingCustomer = await _customerRepository.GetByIdAsync(id);
             if (!existingCustomer.Success)
-                return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng"));
+                return StatusCode(404, new { success = false, message = "Không tìm thấy khách hàng", data = false });
 
             if (existingCustomer.Data.Email != customer.Email)
             {
-                var emailExists = _customerService.IsEmailExists(customer.Email);
+                var emailExists = await _customerRepository.IsEmailExistsAsync(customer.Email);
                 if (emailExists.Success && emailExists.Data)
-                    return BadRequest(ApiResponse<bool>.ErrorResponse("Email đã tồn tại"));
+                    return StatusCode(400, new { success = false, message = "Email đã tồn tại", data = false });
             }
 
             if (existingCustomer.Data.DienThoai != customer.DienThoai)
             {
-                var phoneExists = _customerService.IsPhoneExists(customer.DienThoai);
+                var phoneExists = await _customerRepository.IsPhoneExistsAsync(customer.DienThoai);
                 if (phoneExists.Success && phoneExists.Data)
-                    return BadRequest(ApiResponse<bool>.ErrorResponse("Số điện thoại đã tồn tại"));
+                    return StatusCode(400, new { success = false, message = "Số điện thoại đã tồn tại", data = false });
             }
 
-            var response = _customerService.UpdateCustomer(customer);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _customerRepository.UpdateAsync(customer);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<ApiResponse<bool>> DeleteCustomer(string id)
+        public async Task<IActionResult> DeleteCustomer(string id)
         {
-            var existingCustomer = _customerService.GetCustomerById(id);
+            var existingCustomer = await _customerRepository.GetByIdAsync(id);
             if (!existingCustomer.Success)
-                return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng"));
+                return StatusCode(404, new { success = false, message = "Không tìm thấy khách hàng", data = false });
 
-            var response = _customerService.DeleteCustomer(id);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _customerRepository.DeleteAsync(id);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+        [HttpPut("update-name")]
+        public async Task<IActionResult> UpdateCustomerNameUnified([FromBody] UpdateCustomerNameUnifiedRequest request)
+        {
+            ApiResponse<bool> response;
+
+            if (request.MaTaiKhoan.HasValue)
+            {
+                // Trường hợp có tài khoản
+                response = await _customerRepository.UpdateCustomerNameAsync(request.MaTaiKhoan.Value, request.HoTenKhachHang);
+            }
+            else if (!string.IsNullOrEmpty(request.MaKhachHang))
+            {
+                // Trường hợp không có tài khoản, dùng MaKhachHang
+                response = await _customerRepository.UpdateCustomerNameByCustomerIdAsync(request.MaKhachHang, request.HoTenKhachHang);
+            }
+            else
+            {
+                return StatusCode(400, new { success = false, message = "Phải cung cấp MaTaiKhoan hoặc MaKhachHang", data = (bool?)null });
+            }
+
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (bool?)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPost("{id}/point")]
-        public ActionResult<ApiResponse<bool>> AddPoints([FromBody] AddPointsRequest request)
+        public async Task<IActionResult> AddPoints([FromBody] AddPointsRequest request)
         {
-            // Kiểm tra khách hàng có tồn tại không
-            var existingCustomer = _customerService.GetCustomerById(request.MaKhachHang);
+            var existingCustomer = await _customerRepository.GetByIdAsync(request.MaKhachHang);
             if (!existingCustomer.Success)
-                return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy khách hàng"));
+                return StatusCode(404, new { success = false, message = "Không tìm thấy khách hàng", data = false });
 
-            var response = _customerService.AddPoints(request.MaKhachHang, request.SoDiem);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _customerRepository.AddPointsAsync(request.MaKhachHang, request.SoDiem);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("validate/email/{email}")]
-        public ActionResult<ApiResponse<bool>> CheckEmail(string email)
+        public async Task<IActionResult> CheckEmail(string email)
         {
-            var response = _customerService.IsEmailExists(email);
-            return Ok(response);
+            var response = await _customerRepository.IsEmailExistsAsync(email);
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("validate/phone/{phone}")]
-        public ActionResult<ApiResponse<bool>> CheckPhone(string phone)
+        public async Task<IActionResult> CheckPhone(string phone)
         {
-            var response = _customerService.IsPhoneExists(phone);
-            return Ok(response);
+            var response = await _customerRepository.IsPhoneExistsAsync(phone);
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
-}   
+}

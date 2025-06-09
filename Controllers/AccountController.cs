@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-using HotelManagement.Model;
+﻿using HotelManagement.Model;
 using HotelManagement.Services;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -11,116 +10,210 @@ namespace HotelManagement.Controllers
     [Route("api/accounts")]
     public class AccountController : ControllerBase
     {
-        private readonly IAccountService _accountService;
+        private readonly IAccountRepository _accountRepository;
 
-        public AccountController(IAccountService accountService)
+        public AccountController(IAccountRepository accountRepository)
         {
-            _accountService = accountService;
+            _accountRepository = accountRepository;
         }
 
         [HttpGet]
-        public ActionResult<ApiResponse<IEnumerable<Account>>> GetAllAccounts()
+        public async Task<IActionResult> GetAll(
+            [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1,
+            [FromQuery, Range(1, 100)] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = "MaTaiKhoan",
+            [FromQuery] string? sortOrder = "ASC")
         {
-            var response = _accountService.GetAllAccounts();
-            return response.Success ? Ok(response) : StatusCode(500, response);
+            var (result, totalCount) = await _accountRepository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
+            if (!result.Success)
+                return BadRequest(new { success = false, message = result.Message, data = (IEnumerable<Account>)null });
+
+            return Ok(new
+            {
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
+            });
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchByUsername([FromQuery] string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return BadRequest(new { success = false, message = "Tên tài khoản không được để trống", data = (Account)null });
+
+            var response = await _accountRepository.SearchByUsernameAsync(username);
+            if (!response.Success)
+                return NotFound(new { success = false, message = response.Message, data = (Account)null });
+
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{id}")]
-        public ActionResult<ApiResponse<Account>> GetAccountById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var response = _accountService.GetAccountById(id);
-            return response.Success ? Ok(response) : NotFound(response);
+            var response = await _accountRepository.GetByIdAsync(id);
+            if (!response.Success)
+                return NotFound(new { success = false, message = response.Message, data = (Account)null });
+
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("username/{username}")]
-        public ActionResult<ApiResponse<Account>> GetAccountByUsername(string username)
+        public async Task<IActionResult> GetByUsername(string username)
         {
-            var response = _accountService.GetAccountByUsername(username);
-            return response.Success ? Ok(response) : NotFound(response);
+            var response = await _accountRepository.GetByUsernameAsync(username);
+            if (!response.Success)
+                return NotFound(new { success = false, message = response.Message, data = (Account)null });
+
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
+
         [HttpPost]
-        public ActionResult<ApiResponse<int>> CreateAccount([FromBody] AddAccount account)
+        public async Task<IActionResult> Create([FromBody] AddAccount account)
         {
-            var usernameExists = _accountService.IsUsernameExists(account.TenTaiKhoan);
+            var usernameExists = await _accountRepository.IsUsernameExistsAsync(account.TenTaiKhoan);
             if (usernameExists.Success && usernameExists.Data)
-                return BadRequest(ApiResponse<int>.ErrorResponse("Tên tài khoản đã tồn tại"));
+                return BadRequest(new { success = false, message = "Tên tài khoản đã tồn tại", data = (int?)null });
 
-            var emailExists = _accountService.IsEmailExists(account.Email);
+            var emailExists = await _accountRepository.IsEmailExistsAsync(account.Email);
             if (emailExists.Success && emailExists.Data)
-                return BadRequest(ApiResponse<int>.ErrorResponse("Email đã tồn tại"));
+                return BadRequest(new { success = false, message = "Email đã tồn tại", data = (int?)null });
 
-            var response = _accountService.CreateAccount(account);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _accountRepository.CreateAsync(account);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = (int?)null });
+
+            return CreatedAtAction(nameof(GetById), new { id = response.Data }, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{id}")]
-        public ActionResult<ApiResponse<bool>> UpdateAccount(int id, [FromBody] Account account)
+        public async Task<IActionResult> Update(int id, [FromBody] ModifyAccount modifyAccount)
         {
-            if (id != account.MaTaiKhoan)
-            {
-                return BadRequest(ApiResponse<bool>.ErrorResponse("Mã tài khoản không khớp"));
-            }
+            if (modifyAccount == null)
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", data = false });
 
-            // Kiểm tra tài khoản có tồn tại không
-            var existingAccount = _accountService.GetAccountById(id);
+            var existingAccount = await _accountRepository.GetByIdAsync(id);
             if (!existingAccount.Success)
-                return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy tài khoản"));
+                return NotFound(new { success = false, message = "Không tìm thấy tài khoản", data = false });
 
-            // Kiểm tra username và email đã tồn tại chưa (nếu có thay đổi)
-            if (existingAccount.Data.TenTaiKhoan != account.TenTaiKhoan)
+            if (existingAccount.Data.TenTaiKhoan != modifyAccount.TenTaiKhoan)
             {
-                var usernameExists = _accountService.IsUsernameExists(account.TenTaiKhoan);
+                var usernameExists = await _accountRepository.IsUsernameExistsAsync(modifyAccount.TenTaiKhoan);
                 if (usernameExists.Success && usernameExists.Data)
-                    return BadRequest(ApiResponse<bool>.ErrorResponse("Tên tài khoản đã tồn tại"));
+                    return BadRequest(new { success = false, message = "Tên tài khoản đã tồn tại", data = false });
             }
 
-            if (existingAccount.Data.Email != account.Email)
+            if (existingAccount.Data.Email != modifyAccount.Email)
             {
-                var emailExists = _accountService.IsEmailExists(account.Email);
+                var emailExists = await _accountRepository.IsEmailExistsAsync(modifyAccount.Email);
                 if (emailExists.Success && emailExists.Data)
-                    return BadRequest(ApiResponse<bool>.ErrorResponse("Email đã tồn tại"));
+                    return BadRequest(new { success = false, message = "Email đã tồn tại", data = false });
             }
 
-            var response = _accountService.UpdateAccount(account);
-            return response.Success ? Ok(response) : BadRequest(response);
+            // Tạo Account từ ModifyAccount và id
+            var account = new Account
+            {
+                MaTaiKhoan = id,
+                TenTaiKhoan = modifyAccount.TenTaiKhoan,
+                MatKhau = modifyAccount.MatKhau ?? existingAccount.Data.MatKhau, // Giữ nguyên mật khẩu nếu không được cung cấp
+                TenHienThi = modifyAccount.TenHienThi,
+                Email = modifyAccount.Email,
+                Phone = modifyAccount.Phone,
+                MaVaiTro = modifyAccount.MaVaiTro
+            };
+
+            var response = await _accountRepository.UpdateAsync(account);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = false });
+
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
-
         [HttpDelete("{id}")]
-        public ActionResult<ApiResponse<bool>> DeleteAccount(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            // Kiểm tra tài khoản có tồn tại không
-            var existingAccount = _accountService.GetAccountById(id);
+            var existingAccount = await _accountRepository.GetByIdAsync(id);
             if (!existingAccount.Success)
-                return NotFound(ApiResponse<bool>.ErrorResponse("Không tìm thấy tài khoản"));
+                return NotFound(new { success = false, message = "Không tìm thấy tài khoản", data = false });
 
-            var response = _accountService.DeleteAccount(id);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _accountRepository.DeleteAsync(id);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = false });
+
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPost("change-password")]
-        public ActionResult<ApiResponse<bool>> ChangePassword([FromBody] ChangePasswordRequest request)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
-            var response = _accountService.ChangePassword(
-                request.MaTaiKhoan,
-                request.CurrentPassword,
-                request.NewPassword
-            );
+            var response = await _accountRepository.ChangePasswordAsync(request.MaTaiKhoan, request.CurrentPassword, request.NewPassword);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = false });
 
-            return response.Success ? Ok(response) : BadRequest(response);
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("validate/username/{username}")]
-        public ActionResult<ApiResponse<bool>> CheckUsername(string username)
+        public async Task<IActionResult> CheckUsername(string username)
         {
-            var response = _accountService.IsUsernameExists(username);
-            return Ok(response);
+            var response = await _accountRepository.IsUsernameExistsAsync(username);
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("validate/email/{email}")]
-        public ActionResult<ApiResponse<bool>> CheckEmail(string email)
+        public async Task<IActionResult> CheckEmail(string email)
         {
-            var response = _accountService.IsEmailExists(email);
-            return Ok(response);
+            var response = await _accountRepository.IsEmailExistsAsync(email);
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
 }

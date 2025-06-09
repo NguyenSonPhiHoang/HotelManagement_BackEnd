@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-
 namespace HotelManagement.Model
 {
     public class Room
@@ -12,8 +6,25 @@ namespace HotelManagement.Model
         public string SoPhong { get; set; }
         public decimal GiaPhong { get; set; }
         public string TrangThai { get; set; }
-        public string TenLoaiPhong { get; set; }
+        public string LoaiPhong { get; set; }
         public string TinhTrang { get; set; }
     }
-
+    public class CreateRequestRoom
+    {
+        public string SoPhong { get; set; }
+        public string TrangThai { get; set; }
+        public int LoaiPhong { get; set; }
+        public string TinhTrang { get; set; }
+    }
+    public class RoomAvailabilityResult
+    {
+        public bool IsAvailable { get; set; }
+        public string Message { get; set; }
+        public Room RoomInfo { get; set; }
+    }
+    public class UpdateRoomStatusRequest
+{
+    public string TrangThai { get; set; }
+    public string? TinhTrang { get; set; }
+}
 }

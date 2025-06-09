@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using HotelManagement.Model;
+﻿using HotelManagement.Model;
 using HotelManagement.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
@@ -8,51 +9,91 @@ namespace HotelManagement.Controllers
     [Route("api/roles")]
     public class RoleController : ControllerBase
     {
-        private readonly IRoleService _roleService;
+        private readonly IRoleRepository _roleRepository;
 
-        public RoleController(IRoleService roleService)
+        public RoleController(IRoleRepository roleRepository)
         {
-            _roleService = roleService;
+            _roleRepository = roleRepository;
         }
 
         [HttpGet]
-        public IActionResult GetAllRoles()
+        public async Task<IActionResult> GetAllRoles()
         {
-            var response = _roleService.GetAllRoles();
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _roleRepository.GetAllAsync();
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (IEnumerable<Role>)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpGet("{maVaiTro}")]
-        public IActionResult GetRoleById(string maVaiTro)
+        public async Task<IActionResult> GetRoleById(string maVaiTro)
         {
-            var response = _roleService.GetRoleById(maVaiTro);
-            return response.Success ? Ok(response) : NotFound(response);
+            var response = await _roleRepository.GetByIdAsync(maVaiTro);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (Role)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPost]
-        public IActionResult CreateRole([FromBody] Role role)
+        public async Task<IActionResult> CreateRole([FromBody] AddRole addRole)
         {
-            var response = _roleService.CreateRole(role);
-            return response.Success ? Ok(response) : BadRequest(response);
-        }
+            if (addRole == null || string.IsNullOrWhiteSpace(addRole.TenVaiTro))
+                return StatusCode(400, new { success = false, message = "Tên vai trò không được để trống", data = (int?)null });
 
+            var response = await _roleRepository.CreateAsync(addRole);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (int?)null });
+
+            return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
         [HttpPut("{maVaiTro}")]
-        public IActionResult UpdateRole(string maVaiTro, [FromBody] Role role)
+        public async Task<IActionResult> UpdateRole(string maVaiTro, [FromBody] Role role)
         {
             if (maVaiTro != role.MaVaiTro)
-            {
-                return BadRequest(ApiResponse<string>.ErrorResponse("Mã vai trò không khớp"));
-            }
+                return StatusCode(400, new { success = false, message = "Mã vai trò không khớp", data = false });
 
-            var response = _roleService.UpdateRole(role);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _roleRepository.UpdateAsync(role);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{maVaiTro}")]
-        public IActionResult DeleteRole(string maVaiTro)
+        public async Task<IActionResult> DeleteRole(string maVaiTro)
         {
-            var response = _roleService.DeleteRole(maVaiTro);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _roleRepository.DeleteAsync(maVaiTro);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
 }

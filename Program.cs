@@ -7,21 +7,40 @@ using HotelManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Thêm logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Đăng ký DatabaseDapper
 builder.Services.AddSingleton<DatabaseDapper>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IServiceTypeRepository, ServiceTypeRepository>();
+builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
+builder.Services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBookingServiceRepository, BookingServiceRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IPointHistoryRepository, PointHistoryRepository>();
+builder.Services.AddScoped<IPointProgramRepository, PointProgramRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
-builder.Services.AddScoped<IServiceTypeService, ServiceTypeService>();
-builder.Services.AddScoped<IServiceService, ServiceService>();
-builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
-builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddSingleton<IEmailService>(sp => 
+    new EmailService(
+        builder.Configuration["SmtpSettings:Server"],
+        int.Parse(builder.Configuration["SmtpSettings:Port"]),
+        builder.Configuration["SmtpSettings:Username"],
+        builder.Configuration["SmtpSettings:Password"]
+    ));
 // Cấu hình JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -68,7 +87,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // URL của React frontend
+            policy.WithOrigins("http://localhost:3000","https://hotelmanagment-brown.vercel.app/") // URL của React frontend
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -77,7 +96,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -85,9 +104,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowReactApp"); // Đảm bảo API sử dụng đúng policy CORS
+app.UseCors("AllowReactApp");
 
-app.UseAuthentication(); // Thêm dòng này
+app.UseAuthentication();    
 app.UseAuthorization();
 
 app.MapControllers();

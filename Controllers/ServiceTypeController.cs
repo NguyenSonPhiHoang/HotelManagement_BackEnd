@@ -1,62 +1,111 @@
 using HotelManagement.Model;
 using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
-namespace HotelManagement_BackEnd.Controllers
+namespace HotelManagement.Controllers
 {
     [ApiController]
     [Route("api/service-types")]
-    [Consumes("application/json")]
     public class ServiceTypeController : ControllerBase
     {
-        private readonly IServiceTypeService _serviceTypeService;
+        private readonly IServiceTypeRepository _serviceTypeRepository;
 
-        public ServiceTypeController(IServiceTypeService serviceTypeService)
+        public ServiceTypeController(IServiceTypeRepository serviceTypeRepository)
         {
-            _serviceTypeService = serviceTypeService;
+            _serviceTypeRepository = serviceTypeRepository;
         }
 
         [HttpGet]
-        public ActionResult<ApiResponse<IEnumerable<ServiceType>>> GetAllServiceTypes()
+        public async Task<IActionResult> GetAllServiceTypes(
+            [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1,
+            [FromQuery, Range(1, 100)] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = "MaLoaiDV",
+            [FromQuery] string? sortOrder = "ASC")
         {
-            var response = _serviceTypeService.GetAllServiceTypes();
-            return response.Success ? Ok(response) : StatusCode(500, response);
+            var (result, totalCount) = await _serviceTypeRepository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
+            if (!result.Success)
+                return StatusCode(500, new { success = false, message = result.Message, data = (IEnumerable<ServiceType>)null });
+
+            return StatusCode(200, new
+            {
+                success = result.Success,
+                message = result.Message,
+                data = result.Data,
+                totalCount,
+                pageNumber,
+                pageSize
+            });
         }
 
         [HttpGet("{id}")]
-        public ActionResult<ApiResponse<ServiceType>> GetServiceTypeById(int id)
+        public async Task<IActionResult> GetServiceTypeById(int id)
         {
-            var response = _serviceTypeService.GetServiceTypeById(id);
-            return response.Success ? Ok(response) : NotFound(response);
+            var response = await _serviceTypeRepository.GetByIdAsync(id);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (ServiceType)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPost]
-        public ActionResult<ApiResponse<int>> CreateServiceType([FromBody] AddServiceType serviceType)
+        public async Task<IActionResult> CreateServiceType([FromBody] AddServiceType serviceType)
         {
-            var response = _serviceTypeService.CreateServiceType(serviceType);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _serviceTypeRepository.CreateAsync(serviceType);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (ServiceType)null });
+
+            return StatusCode(201, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpPut("{id}")]
-        public ActionResult<ApiResponse<int>> UpdateServiceType(int id, [FromBody] UpdateServiceType serviceType)
+        public async Task<IActionResult> UpdateServiceType(int id, [FromBody] UpdateServiceType serviceType)
         {
-            var existingServiceType = _serviceTypeService.GetServiceTypeById(id);
+            var existingServiceType = await _serviceTypeRepository.GetByIdAsync(id);
             if (!existingServiceType.Success)
-                return NotFound(ApiResponse<int>.ErrorResponse("Không tìm thấy loại dịch vụ"));
+                return StatusCode(404, new { success = false, message = "Không tìm thấy loại dịch vụ", data = (ServiceType)null });
 
-            var response = _serviceTypeService.UpdateServiceType(id, serviceType);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _serviceTypeRepository.UpdateAsync(id, serviceType);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = (ServiceType)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<ApiResponse<int>> DeleteServiceType(int id)
+        public async Task<IActionResult> DeleteServiceType(int id)
         {
-            var existingServiceType = _serviceTypeService.GetServiceTypeById(id);
+            var existingServiceType = await _serviceTypeRepository.GetByIdAsync(id);
             if (!existingServiceType.Success)
-                return NotFound(ApiResponse<int>.ErrorResponse("Không tìm thấy loại dịch vụ"));
+                return StatusCode(404, new { success = false, message = "Không tìm thấy loại dịch vụ", data = false });
 
-            var response = _serviceTypeService.DeleteServiceType(id);
-            return response.Success ? Ok(response) : BadRequest(response);
+            var response = await _serviceTypeRepository.DeleteAsync(id);
+            if (!response.Success)
+                return StatusCode(400, new { success = false, message = response.Message, data = false });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
         }
     }
 }
