@@ -320,35 +320,48 @@ namespace HotelManagement.Services
         {
             try
             {
-                var otp = await _db.QueryFirstOrDefaultStoredProcedureAsync<OtpVerification>("sp_OtpVerification_GetByAccountId", new { request.MaTaiKhoan });
-                if (otp == null)
-                    return ApiResponse<bool>.ErrorResponse("Không tìm thấy OTP");
+                if (string.IsNullOrWhiteSpace(request.Email))
+                    return ApiResponse<bool>.ErrorResponse("Email không được để trống");
+
+                // Tìm MaTaiKhoan từ Email
+                var account = await _db.QueryFirstOrDefaultAsync<AccountModel>(
+                    "SELECT MaTaiKhoan FROM Account WHERE Email = @Email",
+                    new { request.Email });
+
+                if (account == null)
+                    return ApiResponse<bool>.ErrorResponse("Không tìm thấy tài khoản với email này");
+
+                int maTaiKhoan = account.MaTaiKhoan;
 
                 // Tạo OTP mới
-                string newOtpCode = GenerateOtp();
+                string otpCode = GenerateOtp();
                 DateTime createdAt = DateTime.UtcNow;
                 DateTime expiresAt = createdAt.AddMinutes(2);
 
-                // Cập nhật OTP
+                // Lưu OTP mới vào bảng
                 await _db.ExecuteStoredProcedureAsync("sp_OtpVerification_Insert", new
                 {
-                    request.MaTaiKhoan,
-                    OtpCode = newOtpCode,
-                    request.Email,
+                    MaTaiKhoan = maTaiKhoan,
+                    OtpCode = otpCode,
+                    Email = request.Email,
                     CreatedAt = createdAt,
                     ExpiresAt = expiresAt
                 });
 
-                // Gửi OTP mới qua email
-                await _emailService.SendEmailAsync(request.Email, "Xác minh OTP", $"Mã OTP mới của bạn là: {newOtpCode}. Hiệu lực trong 2 phút.");
+                // Gửi email OTP
+                await _emailService.SendEmailAsync(request.Email, "Mã OTP mới của bạn",
+                    $"Mã OTP của bạn là: {otpCode}. Mã sẽ hết hiệu lực sau 2 phút. Vui lòng nhập mã này để xác minh tài khoản.");
 
-                return ApiResponse<bool>.SuccessResponse(true, "Gửi lại OTP thành công");
+                Console.WriteLine($"Gửi lại OTP thành công tới email: {request.Email}");
+                return ApiResponse<bool>.SuccessResponse(true, "Mã OTP đã được gửi lại thành công");
             }
             catch (Exception ex)
             {
-                return ApiResponse<bool>.ErrorResponse($"Lỗi khi gửi lại OTP: {ex.Message}");
+                Console.WriteLine($"Lỗi khi gửi lại OTP: {ex.Message}");
+                return ApiResponse<bool>.ErrorResponse("Có lỗi xảy ra khi gửi lại mã OTP");
             }
         }
+
 
         private string GenerateOtp()
         {

@@ -44,7 +44,6 @@ namespace HotelManagement.Model
 
     public class OtpResendRequest
     {
-        public int MaTaiKhoan { get; set; }
         public string Email { get; set; } = null!;
     }
 
