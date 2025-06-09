@@ -40,6 +40,7 @@
         public string Phone { get; set; }
         public int MaVaiTro { get; set; }
         public bool IsActivated { get; set; }
+        public int MaKhachHang { get; set; }
     }
 
 
