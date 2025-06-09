@@ -56,7 +56,7 @@ namespace HotelManagement.Services
 
                 Console.WriteLine($"Đang tìm tài khoản với TenTaiKhoan: {request.TenTaiKhoan}");
 
-                // Sử dụng SP thay vì truy vấn trực tiếp
+                // Sử dụng SP đã được sửa đổi để lấy thêm MaKhachHang
                 var account = await _db.QueryFirstOrDefaultStoredProcedureAsync<AccountModel>(
                     "sp_Login",
                     new { TenTaiKhoan = request.TenTaiKhoan });
@@ -67,7 +67,7 @@ namespace HotelManagement.Services
                     return ApiResponse<TokenResponse>.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng");
                 }
 
-                Console.WriteLine($"Tài khoản tìm thấy: MaTaiKhoan = {account.MaTaiKhoan}, Hash lưu: {account.MatKhau}");
+                Console.WriteLine($"Tài khoản tìm thấy: MaTaiKhoan = {account.MaTaiKhoan}, Hash lưu: {account.MatKhau}, MaKhachHang = {account.MaKhachHang}");
 
                 // Kiểm tra mật khẩu
                 if (!PasswordHasher.VerifyPassword(request.MatKhau, account.MatKhau))
@@ -75,9 +75,9 @@ namespace HotelManagement.Services
                     Console.WriteLine($"Xác minh mật khẩu thất bại cho TenTaiKhoan: {request.TenTaiKhoan}");
                     return ApiResponse<TokenResponse>.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng");
                 }
+
                 Console.WriteLine($"Tài khoản: {account.TenTaiKhoan}, MaTaiKhoan: {account.MaTaiKhoan}");
                 Console.WriteLine($"IsActivated: {account.IsActivated} (Kiểu: {account.IsActivated.GetType()})");
-                // ← THAY ĐỔI CHÍNH: Kiểm tra IsActivated thay vì OTP
                 Console.WriteLine($"Kiểm tra trạng thái kích hoạt cho MaTaiKhoan: {account.MaTaiKhoan}");
 
                 // Kiểm tra tài khoản đã được kích hoạt chưa
@@ -87,7 +87,7 @@ namespace HotelManagement.Services
                     return ApiResponse<TokenResponse>.ErrorResponse("Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để xác thực OTP");
                 }
 
-                // Tạo token response
+                // Tạo token response với MaKhachHang
                 var user = new TokenResponse
                 {
                     MaTaiKhoan = account.MaTaiKhoan,
@@ -95,7 +95,8 @@ namespace HotelManagement.Services
                     TenHienThi = account.TenHienThi,
                     Email = account.Email,
                     Phone = account.Phone,
-                    MaVaiTro = account.MaVaiTro
+                    MaVaiTro = account.MaVaiTro,
+                    MaKhachHang = account.MaKhachHang  // ← THÊM MỚI
                 };
 
                 var accessToken = GenerateJwtToken(user);
@@ -126,8 +127,8 @@ namespace HotelManagement.Services
                     if (tokenExists == 0)
                     {
                         await _db.ExecuteAsync(@"
-                    INSERT INTO UserToken (MaTaiKhoan, AccessToken, RefreshToken, NgayHetHan) 
-                    VALUES (@MaTaiKhoan, @AccessToken, @RefreshToken, @NgayHetHan)",
+                INSERT INTO UserToken (MaTaiKhoan, AccessToken, RefreshToken, NgayHetHan) 
+                VALUES (@MaTaiKhoan, @AccessToken, @RefreshToken, @NgayHetHan)",
                             new
                             {
                                 MaTaiKhoan = user.MaTaiKhoan,
@@ -146,7 +147,7 @@ namespace HotelManagement.Services
                 user.AccessToken = accessToken;
                 user.RefreshToken = refreshToken;
                 user.ExpiresIn = expiresIn;
-                Console.WriteLine($"Đăng nhập thành công: MaTaiKhoan = {user.MaTaiKhoan}");
+                Console.WriteLine($"Đăng nhập thành công: MaTaiKhoan = {user.MaTaiKhoan}, MaKhachHang = {user.MaKhachHang}");
                 return ApiResponse<TokenResponse>.SuccessResponse(user, "Đăng nhập thành công");
             }
             catch (Exception ex)
@@ -169,11 +170,12 @@ namespace HotelManagement.Services
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.MaTaiKhoan.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Name, user.TenTaiKhoan),
-                new Claim(ClaimTypes.Role, user.MaVaiTro.ToString())
-            };
+        new Claim(JwtRegisteredClaimNames.Sub, user.MaTaiKhoan.ToString()),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim(ClaimTypes.Name, user.TenTaiKhoan),
+        new Claim(ClaimTypes.Role, user.MaVaiTro.ToString()),
+        new Claim("MaKhachHang", user.MaKhachHang.ToString())
+    };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -186,7 +188,7 @@ namespace HotelManagement.Services
                 signingCredentials: creds);
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-            Console.WriteLine($"Tạo JWT token thành công cho MaTaiKhoan: {user.MaTaiKhoan}");
+            Console.WriteLine($"Tạo JWT token thành công cho MaTaiKhoan: {user.MaTaiKhoan}, MaKhachHang: {user.MaKhachHang}");
             return tokenString;
         }
         public async Task<ApiResponse<int>> RegisterAsync(RegisterRequest request)
