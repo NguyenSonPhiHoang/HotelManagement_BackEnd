@@ -133,5 +133,6 @@ namespace HotelManagement.Services
                 return (ApiResponse<IEnumerable<Payment>>.ErrorResponse($"Lỗi khi lấy danh sách thanh toán: {ex.Message}"), 0);
             }
         }
+       
     }
 }
