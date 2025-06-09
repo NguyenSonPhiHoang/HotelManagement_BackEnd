@@ -22,6 +22,8 @@ namespace HotelManagement.Services
         Task<ApiResponse<bool>> AccumulatePointsAsync(string maKhachHang, decimal thanhTien);
         Task<ApiResponse<decimal>> UsePointsAsync(string maKhachHang, int soDiemSuDung);
         Task<ApiResponse<PointProgram>> GetPointProgramByIdAsync(string maCT);
+        Task<ApiResponse<CustomerPointsInfo>> GetCustomerPointsInfoAsync(string maKhachHang);
+
     }
 
     public class CustomerRepository : ICustomerRepository
@@ -488,6 +490,27 @@ namespace HotelManagement.Services
             {
                 Console.WriteLine($"Lỗi khi lấy chương trình điểm: {ex.Message}");
                 return ApiResponse<PointProgram>.ErrorResponse($"Lỗi khi lấy chương trình điểm: {ex.Message}");
+            }
+        }
+        public async Task<ApiResponse<CustomerPointsInfo>> GetCustomerPointsInfoAsync(string maKhachHang)
+        {
+            try
+            {
+                if (!int.TryParse(maKhachHang, out int maKhachHangInt))
+                    return ApiResponse<CustomerPointsInfo>.ErrorResponse("Mã khách hàng không hợp lệ");
+
+                var customerInfo = await _db.QueryFirstOrDefaultAsync<CustomerPointsInfo>(
+                    "SELECT * FROM customer_diem_view WHERE MaKhachHang = @MaKhachHang",
+                    new { MaKhachHang = maKhachHangInt });
+
+                if (customerInfo == null)
+                    return ApiResponse<CustomerPointsInfo>.ErrorResponse("Không tìm thấy thông tin khách hàng");
+
+                return ApiResponse<CustomerPointsInfo>.SuccessResponse(customerInfo, "Lấy thông tin điểm khách hàng thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<CustomerPointsInfo>.ErrorResponse($"Lỗi khi lấy thông tin điểm khách hàng: {ex.Message}");
             }
         }
     }

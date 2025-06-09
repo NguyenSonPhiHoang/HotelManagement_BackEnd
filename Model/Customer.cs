@@ -25,4 +25,17 @@
         public string? MaKhachHang { get; set; }   // Cho trường hợp không có tài khoản
         public string HoTenKhachHang { get; set; }
     }
+        public class CustomerPointsInfo
+    {
+        public string MaKhachHang { get; set; }
+        public string HoTenKhachHang { get; set; }
+        public string Email { get; set; }
+        public string DienThoai { get; set; }
+        public int TongDiem { get; set; }
+        public int DiemDaSuDung { get; set; }
+        public int DiemCoTheSuDung { get; set; }
+        public string HangThanhVien { get; set; }
+        public decimal MucGiamGia { get; set; }
+        public decimal TyLeTichDiem { get; set; }
+    }
 }
