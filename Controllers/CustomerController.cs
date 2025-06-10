@@ -39,18 +39,12 @@ namespace HotelManagement.Controllers
                 pageSize
             });
         }
+
         [HttpPost]
         public async Task<IActionResult> CreateCustomer([FromBody] AddCustomer addCustomer)
         {
             if (!ModelState.IsValid)
-            {
-                return StatusCode(400, new
-                {
-                    success = false,
-                    message = "Dữ liệu không hợp lệ",
-                    data = (Customer)null
-                });
-            }
+                return StatusCode(400, new { success = false, message = "Dữ liệu không hợp lệ", data = (Customer)null });
 
             var response = await _customerRepository.CreateAsync(addCustomer);
             if (!response.Success)
@@ -63,12 +57,28 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCustomerById(string id)
         {
             var response = await _customerRepository.GetByIdAsync(id);
             if (!response.Success)
                 return StatusCode(404, new { success = false, message = response.Message, data = (Customer)null });
+
+            return StatusCode(200, new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
+
+        [HttpGet("{id}/points")]
+        public async Task<IActionResult> GetCustomerPoints(string id)
+        {
+            var response = await _customerRepository.GetCustomerPointsInfoAsync(id);
+            if (!response.Success)
+                return StatusCode(404, new { success = false, message = response.Message, data = (CustomerPointsInfo)null });
 
             return StatusCode(200, new
             {
@@ -132,6 +142,7 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
+
         [HttpPut("update-name")]
         public async Task<IActionResult> UpdateCustomerNameUnified([FromBody] UpdateCustomerNameUnifiedRequest request)
         {
@@ -139,12 +150,10 @@ namespace HotelManagement.Controllers
 
             if (request.MaTaiKhoan.HasValue)
             {
-                // Trường hợp có tài khoản
                 response = await _customerRepository.UpdateCustomerNameAsync(request.MaTaiKhoan.Value, request.HoTenKhachHang);
             }
             else if (!string.IsNullOrEmpty(request.MaKhachHang))
             {
-                // Trường hợp không có tài khoản, dùng MaKhachHang
                 response = await _customerRepository.UpdateCustomerNameByCustomerIdAsync(request.MaKhachHang, request.HoTenKhachHang);
             }
             else
