@@ -12,6 +12,8 @@ namespace HotelManagement.Model
         public string? HoTenKhachHang { get; set; }
         public string? SoPhong { get; set; }
         public DateTime NgayTaoHoaDon { get; set; }
+        public int SoDiemSuDung { get; set; }
+        public decimal SoTienGiam { get; set; }
 
     }
     public class InvoiceCreateRequest
@@ -22,6 +24,10 @@ namespace HotelManagement.Model
         public decimal TongTienDichVu { get; set; }
         public decimal TongThanhTien { get; set; }
         public string TrangThai { get; set; }
+        
+    // Thêm hai thuộc tính sau
+    public int SoDiemSuDung { get; set; }
+    public decimal SoTienGiam { get; set; }
     }
     public class InvoiceServiceCreateRequest
     {
