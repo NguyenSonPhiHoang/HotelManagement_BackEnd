@@ -19,6 +19,8 @@ namespace HotelManagement.Services
         Task<ApiResponse<bool>> IsUsernameExistsAsync(string username);
         Task<ApiResponse<bool>> IsEmailExistsAsync(string email);
         Task<ApiResponse<Account>> SearchByUsernameAsync(string username);
+        Task<ApiResponse<bool>> ActivateAccountAsync(string email);
+
     }
     public class AccountRepository : IAccountRepository
     {
@@ -233,6 +235,24 @@ namespace HotelManagement.Services
             catch (Exception ex)
             {
                 return ApiResponse<Account>.ErrorResponse($"Lỗi khi tìm kiếm tài khoản: {ex.Message}");
+            }
+        }
+        public async Task<ApiResponse<bool>> ActivateAccountAsync(string email)
+        {
+            try
+            {
+                var account = await _db.QueryFirstOrDefaultStoredProcedureAsync<Account>(
+                    "sp_Account_ActivateByEmail",
+                    new { Email = email });
+
+                if (account == null)
+                    return ApiResponse<bool>.ErrorResponse("Kích hoạt tài khoản thất bại");
+
+                return ApiResponse<bool>.SuccessResponse(true, "Kích hoạt tài khoản thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Lỗi khi kích hoạt tài khoản: {ex.Message}");
             }
         }
     }

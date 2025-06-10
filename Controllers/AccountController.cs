@@ -215,5 +215,22 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
+         [HttpPost("activate")]
+        public async Task<IActionResult> Activate([FromBody] ActivateAccountRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", data = false });
+
+            var response = await _accountRepository.ActivateAccountAsync(request.Email);
+            if (!response.Success)
+                return BadRequest(new { success = false, message = response.Message, data = false });
+
+            return Ok(new
+            {
+                success = response.Success,
+                message = response.Message,
+                data = response.Data
+            });
+        }
     }
 }

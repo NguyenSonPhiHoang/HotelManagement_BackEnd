@@ -43,6 +43,10 @@
         public int MaKhachHang { get; set; }
         public string HoTenKhachHang { get; set; }
     }
-
+    public class ActivateAccountRequest
+    {
+        
+        public string Email { get; set; }
+    }
 
 }
