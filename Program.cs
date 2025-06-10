@@ -87,7 +87,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000","https://hotelmanagment-brown.vercel.app/") // URL của React frontend
+            policy.WithOrigins("http://localhost:3000","https://debughotelclient.vercel.app/") // URL của React frontend
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
