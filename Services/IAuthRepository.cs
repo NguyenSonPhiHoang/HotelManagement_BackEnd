@@ -37,7 +37,7 @@ namespace HotelManagement.Services
         // Phương thức mới để tạo RefreshToken
         private string GenerateRefreshToken()
         {
-            var randomNumber = new byte[32];
+            var randomNumber = new byte[32]; // 256 bits
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(randomNumber);
@@ -96,7 +96,8 @@ namespace HotelManagement.Services
                     Email = account.Email,
                     Phone = account.Phone,
                     MaVaiTro = account.MaVaiTro,
-                    MaKhachHang = account.MaKhachHang  // ← THÊM MỚI
+                    MaKhachHang = account.MaKhachHang,
+                    HoTenKhachHang = account.HoTenKhachHang,
                 };
 
                 var accessToken = GenerateJwtToken(user);
@@ -174,7 +175,7 @@ namespace HotelManagement.Services
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim(ClaimTypes.Name, user.TenTaiKhoan),
         new Claim(ClaimTypes.Role, user.MaVaiTro.ToString()),
-        new Claim("MaKhachHang", user.MaKhachHang.ToString())
+        new Claim("MaKhachHang", user.MaKhachHang.ToString()),
     };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
