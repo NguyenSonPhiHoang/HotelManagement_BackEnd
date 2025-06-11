@@ -1,11 +1,13 @@
 ﻿using HotelManagement.Model;
 using HotelManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/accounts")]
     public class AccountController : ControllerBase
@@ -215,7 +217,8 @@ namespace HotelManagement.Controllers
                 data = response.Data
             });
         }
-         [HttpPost("activate")]
+        [Authorize(Roles = "Admin,Staff")]
+        [HttpPost("activate")]
         public async Task<IActionResult> Activate([FromBody] ActivateAccountRequest request)
         {
             if (!ModelState.IsValid)

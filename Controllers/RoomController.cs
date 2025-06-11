@@ -1,11 +1,13 @@
 using HotelManagement.Model;
 using HotelManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
+    [Authorize(Roles = "Admin,Staff")]
     [ApiController]
     [Route("api/rooms")]
     public class RoomController : ControllerBase

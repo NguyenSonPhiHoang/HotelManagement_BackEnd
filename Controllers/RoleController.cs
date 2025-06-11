@@ -1,10 +1,12 @@
 ﻿using HotelManagement.Model;
 using HotelManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace HotelManagement.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/roles")]
     public class RoleController : ControllerBase
@@ -21,7 +23,7 @@ namespace HotelManagement.Controllers
         {
             var response = await _roleRepository.GetAllAsync();
             if (!response.Success)
-                return StatusCode(400, new { success = false, message = response.Message, data = (IEnumerable<Role>)null });
+                return StatusCode(400, new { success = false, message = response.Message, data = (IEnumerable<Role>?)null });
 
             return StatusCode(200, new
             {
@@ -36,7 +38,7 @@ namespace HotelManagement.Controllers
         {
             var response = await _roleRepository.GetByIdAsync(maVaiTro);
             if (!response.Success)
-                return StatusCode(404, new { success = false, message = response.Message, data = (Role)null });
+                return StatusCode(404, new { success = false, message = response.Message, data = (Role?)null });
 
             return StatusCode(200, new
             {

@@ -1,5 +1,6 @@
 using HotelManagement.Model;
 using HotelManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using System.Web;
 
 namespace HotelManagement.Controllers
 {
+    [Authorize(Roles = "Admin,Staff")]
     [Route("api/invoices")]
     [ApiController]
     public class InvoiceController : ControllerBase
@@ -109,7 +111,7 @@ namespace HotelManagement.Controllers
         {
             var (result, totalCount) = await _repository.GetAllAsync(pageNumber, pageSize, searchTerm, sortBy, sortOrder);
             if (!result.Success)
-                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<Invoice>)null });
+                return StatusCode(400, new { success = false, message = result.Message, data = (IEnumerable<Invoice>?)null });
 
             return StatusCode(200, new
             {
