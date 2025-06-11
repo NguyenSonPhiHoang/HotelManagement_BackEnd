@@ -3,6 +3,7 @@ using HotelManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace HotelManagement.Controllers
 {
@@ -119,6 +120,29 @@ namespace HotelManagement.Controllers
                 pageNumber,
                 pageSize
             });
+        }
+        [HttpGet("revenue-statistics")]
+        public async Task<IActionResult> GetRevenueStatistics(
+            [FromQuery] DateTime? ngayBatDau,
+            [FromQuery] DateTime? ngayKetThuc)
+        {
+            try
+            {
+                var response = await _repository.GetRevenueStatisticsAsync(ngayBatDau, ngayKetThuc);
+                if (!response.Success)
+                    return BadRequest(new { success = false, message = response.Message });
+
+                return Ok(new
+                {
+                    success = response.Success,
+                    message = response.Message,
+                    data = response.Data
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Lỗi server: {ex.Message}" });
+            }
         }
     }
 }
