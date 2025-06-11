@@ -15,8 +15,10 @@ namespace HotelManagement.Services
         Task<ApiResponse<Invoice>> GetByIdAsync(int maHoaDon);
         Task<(ApiResponse<IEnumerable<Invoice>> Items, int TotalCount)> GetAllAsync(
             int pageNumber, int pageSize, string? searchTerm = null, string? sortBy = "MaHoaDon", string? sortOrder = "ASC");
-        Task<ApiResponse<bool>> AddServiceAsync(InvoiceServiceCreateRequest request); // Thêm phương thức
+        Task<ApiResponse<bool>> AddServiceAsync(InvoiceServiceCreateRequest request);
+        Task<ApiResponse<RevenueStatistics>> GetRevenueStatisticsAsync(DateTime? ngayBatDau, DateTime? ngayKetThuc);
     }
+
     public class InvoiceRepository : IInvoiceRepository
     {
         private readonly DatabaseDapper _db;
@@ -136,6 +138,7 @@ namespace HotelManagement.Services
                 return (ApiResponse<IEnumerable<Invoice>>.ErrorResponse($"Lỗi khi lấy danh sách hóa đơn: {ex.Message}"), 0);
             }
         }
+
         public async Task<ApiResponse<bool>> AddServiceAsync(InvoiceServiceCreateRequest request)
         {
             try
@@ -163,7 +166,6 @@ namespace HotelManagement.Services
                 var rowsAffected = await _db.ExecuteStoredProcedureAsync("sp_InvoiceService_Create", parameters);
                 if (rowsAffected <= 0)
                 {
-                    // Log để debug
                     Console.WriteLine($"rowsAffected = {rowsAffected} for MaHoaDon = {request.MaHoaDon}, MaDichVu = {request.MaDichVu}");
                     return ApiResponse<bool>.ErrorResponse("Thêm hoặc cập nhật dịch vụ thất bại");
                 }
@@ -176,6 +178,37 @@ namespace HotelManagement.Services
             catch (Exception ex)
             {
                 return ApiResponse<bool>.ErrorResponse($"Lỗi khi thêm dịch vụ: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<RevenueStatistics>> GetRevenueStatisticsAsync(DateTime? ngayBatDau, DateTime? ngayKetThuc)
+        {
+            try
+            {
+                using var reader = await _db.QueryMultipleAsync("sp_Revenue_Statistics",
+                    new
+                    {
+                        NgayBatDau = ngayBatDau,
+                        NgayKetThuc = ngayKetThuc
+                    });
+
+                var summary = await reader.ReadSingleOrDefaultAsync<dynamic>();
+                var danhSachDoanhThuNgay = (await reader.ReadAsync<DailyRevenue>()).ToList();
+
+                var result = new RevenueStatistics
+                {
+                    TongDoanhThuPhong = summary?.TongDoanhThuPhong ?? 0,
+                    TongDoanhThuDichVu = summary?.TongDoanhThuDichVu ?? 0,
+                    TongDoanhThu = summary?.TongDoanhThu ?? 0,
+                    SoLuongHoaDon = summary?.SoLuongHoaDon ?? 0,
+                    DanhSachDoanhThuNgay = danhSachDoanhThuNgay
+                };
+
+                return ApiResponse<RevenueStatistics>.SuccessResponse(result, "Lấy thống kê doanh thu thành công");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<RevenueStatistics>.ErrorResponse($"Lỗi khi lấy thống kê doanh thu: {ex.Message}");
             }
         }
     }
